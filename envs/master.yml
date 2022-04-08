@@ -9,7 +9,7 @@ services:
       - "5000:5000"
     environment:
       - TYK_LOGLEVEL=${TYK_LOGLEVEL:-debug}
-      - TYK_DB_LICENSE=${TYK_DB_LICENSE}
+      - TYK_DB_LICENSEKEY=${TYK_DB_LICENSE}
     volumes:
       - ../confs/${CONFIG}:/conf
     depends_on:
