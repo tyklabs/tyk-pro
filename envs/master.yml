@@ -21,6 +21,9 @@ services:
     image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
     ports:
       - "8080:8080"
+    environment:
+        - TYK_GW_DBAPPCONFOPTIONS_CONNECTIONSTRING=http://dashboard:3000
+        - TYK_GW_POLICIES_POLICYCONNECTIONSTRING=http://dashboard:3000
     volumes:
       - ../confs/${CONFIG}:/conf
     depends_on:
