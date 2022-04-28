@@ -1,0 +1,33 @@
+services:
+  upstream:
+    image: citizenstig/httpbin
+
+  gateway:
+    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../confs/${CONFIG}:/conf
+    depends_on:
+      - redis
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+
+  pump:
+    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-pump:master
+    volumes:
+      - ../confs/${CONFIG}:/conf
+      - /tmp/pump-data:/pump-data
+    depends_on:
+      - gateway
+      - mongo
+    entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
+
+  redis:
+    image: redis:6.0
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:4.2
+    ports:
+      - "27017:27017"

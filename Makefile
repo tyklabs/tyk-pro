@@ -1,6 +1,9 @@
 ENV ?= master
 CONFIG ?= master
 
+tyk-pump: env
+	@scripts/pump.sh http://localhost:8080
+
 tyk-analytics: env
 	@scripts/dash-bootstrap.sh http://localhost:3000
 	curl -s -XGET -H "Accept: application/json" "http://localhost:8080/smoke-test-api/get?arg=test"| jq -e '.args.arg == "test"'
