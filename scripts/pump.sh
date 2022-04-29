@@ -32,14 +32,40 @@ cleanup() {
     rm -f $KEY_FILE $API_FILE
 }
 
+check_gw_status() {
+    echo "Checking Tyk GW status..."
+    status=$(curlf "${GWBASE}/hello" | jq -r '.status')
+    if [ "$status" != "pass" ]
+    then
+        return 1
+    fi
+    redis_status=$(curlf "${GWBASE}/hello" | jq -r '.details.redis.status')
+    if [ "$redis_status" != "pass" ]
+    then
+        return 1
+    fi
+    return 0
+}
+
+# Check if gw is up, if not wait a bit.
+if ! check_gw_status
+then
+    echo "Gateway & gateway redis is not yet up, waiting a bit..."
+    sleep 10
+fi
+
+
 # Add the test API - keyless APIs is not getting exported when pump is run.
+echo "Adding a test API to the Tyk GW..."
 curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" \
     -XPOST --data @data/api.authenabled.json ${GWBASE}/tyk/apis
 
 # Add a corresponding key
+echo "Adding a key for the added API..."
 KEY=$(curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" -XPOST --data @data/key.json ${GWBASE}/tyk/keys | jq -r '.key')
 
 # Hot reload gateway
+echo "Executing gateway hot reload..."
 curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" \
     ${GWBASE}/tyk/reload/group
 
@@ -47,6 +73,7 @@ curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" \
 sleep 2
 
 # Get the key from the previous step and access the API endpoint with the key and a custom user agent.
+echo "Accessing the added API with a custom user agent string..."
 curl -v --header "Authorization: $KEY" --header "User-Agent: HAL9000" \
     "${GWBASE}/test/"
 
@@ -105,5 +132,4 @@ else
     cleanup
     exit 1
 fi
-
-cleanup
+exit 0
