@@ -3,17 +3,19 @@ services:
     image: citizenstig/httpbin
 
   gateway:
-    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
+    image: ${REGISTRY}/${GWIMAGE}
     ports:
       - "8080:8080"
     volumes:
       - ../confs/${CONFIG}:/conf
+    environment:
+      - TYK_LOGLEVEL=debug
     depends_on:
       - redis
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
   pump:
-    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-pump:master
+    image: ${REGISTRY}/${PUMPIMAGE}
     volumes:
       - ../confs/${CONFIG}:/conf
       - /tmp/pump-data:/pump-data

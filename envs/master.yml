@@ -3,7 +3,7 @@ services:
     image: citizenstig/httpbin
 
   dashboard:
-    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-analytics:master
+    image: ${REGISTRY}/${DBIMAGE}
     ports:
       - "3000:3000"
       - "5000:5000"
@@ -18,7 +18,7 @@ services:
     entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
 
   gateway:
-    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
+    image: ${REGISTRY}/${GWIMAGE}
     ports:
       - "8080:8080"
     environment:
@@ -31,7 +31,7 @@ services:
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
   pump:
-    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-pump:master
+    image: ${REGISTRY}/${PUMPIMAGE}
     volumes:
       - ../confs/${CONFIG}:/conf
     depends_on:
