@@ -35,7 +35,7 @@ services:
     environment:
       - loglevel=warning
     volumes:
-      - ../data/mdcb-{CONFIG}/redis-volumes/datacenter:/data
+      - ../data/${ENV}-${CONFIG}/redis-volumes/datacenter:/data
 
   dashboard:
     image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-analytics:master
