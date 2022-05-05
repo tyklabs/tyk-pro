@@ -7,7 +7,7 @@ tyk-analytics: env
 
 env: preflight
 	CONFIG=$(CONFIG) docker compose -f envs/$(ENV).yml up -d
-	sleep 3 # wait for a bit
+	sleep 8 # wait for a bit
 
 preflight:
 	@test -n "$(TYK_DB_LICENSE)"
