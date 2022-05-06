@@ -25,10 +25,9 @@ fi
 
 db_base=$1
 
-# 1. Create org using admin authentication
-orgid=$(curlf --header "admin-auth: 12345" \
-	      --data @data/org.json \
-	      ${db_base}/admin/organisations | jq -r '.Meta')
+# 1. Get org using admin authentication
+orgid="$(curlf --header "admin-auth: 12345" \
+	      ${db_base}/admin/organisations | jq -r '.organisations[0].id')"
 
 # 1a. Add orgid into user creation json
 user_json=$(jq --arg oid $orgid '. + { org_id: $oid }' <<<'{
@@ -43,6 +42,7 @@ user_json=$(jq --arg oid $orgid '. + { org_id: $oid }' <<<'{
 user_auth=$(curlf --header "admin-auth: 12345" \
 		  --data "$user_json" \
 		  ${db_base}/admin/users | jq -r '.Message')
+
 
 # 3. Get user id of newly created user using user authentication
 uid=$(curlf --header "authorization: $user_auth" \
