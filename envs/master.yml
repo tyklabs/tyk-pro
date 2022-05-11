@@ -8,7 +8,7 @@ services:
     ports:
     - "9090:9090"
     environment:
-    - TYK_MDCB_LICENSE=${MDCB_LICENSE}
+    - TYK_MDCB_LICENSE=${TYK_MDCB_LICENSE}
     volumes: 
     - ../confs/${CONFIG}/tyk-sink.conf:/opt/tyk-sink/tyk_sink.conf
     depends_on:

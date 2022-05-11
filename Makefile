@@ -23,7 +23,7 @@ env: preflight
 	CONFIG=$(CONFIG) REGISTRY=$(REGISTRY) docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env up -d
 
 mdcb-preflight: analytics-preflight
-	@test -n "$(MDCB_LICENSE)"
+	@test -n "$(TYK_MDCB_LICENSE)"
 
 analytics-preflight:
 	@test -n "$(TYK_DB_LICENSE)"
