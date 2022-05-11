@@ -1,0 +1,24 @@
+{
+  "name": "test",
+  "slug": "test",
+  "use_keyless": true,
+  "definition": {
+    "location": "header",
+    "key": "x-api-version"
+  },
+  "version_data": {
+    "not_versioned": true,
+    "versions": {
+      "Default": {
+        "name": "Default",
+        "use_extended_paths": true
+    }
+   }
+  },
+  "proxy": {
+    "listen_path": "/test/",
+    "target_url": "http://upstream:8000/get",
+    "strip_listen_path": true
+  },
+  "active": true
+}
