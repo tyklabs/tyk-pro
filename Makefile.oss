@@ -1,11 +1,14 @@
 ENV ?= oss
 
-oss: preflight
-	docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env up -d
+oss: env
 	curl -s -XGET -H "Accept: application/json" "http://localhost:8080/test/get?arg=test"| jq -e '.args.arg == "test"'
 
+tyk-pump: env
+	@command -v mongoexport
+	@scripts/$(ENV)/pump.sh "http://localhost:8080"
+
 env: preflight
-	CONFIG=$(CONFIG) REGISTRY=$(REGISTRY) docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env up -d
+	docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env up -d
 
 preflight:
 	@command -v curl jq
@@ -16,7 +19,3 @@ clean:
 	CONFIG=$(CONFIG) REGISTRY=$(REGISTRY) docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env down
 
 .PHONY: env preflight clean
-
-# Local Variables:
-# mode: makefile
-# End:

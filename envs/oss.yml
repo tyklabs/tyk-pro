@@ -27,7 +27,8 @@ services:
     image: ${REGISTRY}/${PUMPIMAGE}
     volumes:
       - ../confs/${CONFIG}:/conf
-      - /tmp/pump-data:/pump-data
+# Watchout
+      - ../data/${CONFIG}/pump-data:/pump-data
     depends_on:
       - gateway
       - mongo
