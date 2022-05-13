@@ -1,0 +1,137 @@
+services:
+  upstream:
+    profiles: ["all", "master-datacenter"]
+    image: citizenstig/httpbin
+    restart: always
+
+  mdcb:
+    profiles: ["all", "master-datacenter"]
+    image: tykio/${MDCBIMAGE}
+    ports:
+    - "9090:9090"
+    environment:
+    - TYK_MDCB_LICENSE=${TYK_MDCB_LICENSE}
+    volumes: 
+    - ../confs/${CONFIG}/tyk-sink.conf:/opt/tyk-sink/tyk_sink.conf
+    depends_on:
+    - redis
+    - mongo
+    - gateway
+
+  gateway-datacenter:
+    profiles: ["all", "slave-datacenter"]
+    image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
+    ports:
+      - "8082:8082"
+    environment:
+      - TYK_LOGLEVEL=info
+      - TYK_GW_SLAVEOPTIONS_RPCKEY=${TYK_GW_SLAVE_RPC_KEY}
+      - TYK_GW_SLAVEOPTIONS_APIKEY=${TYK_GW_SLAVE_API_KEY}
+    volumes:
+      - ../confs/${CONFIG}:/conf
+    depends_on:
+      - redis-datacenter
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-gw-datacenter.conf"]
+    healthcheck:
+      test: curl -s --fail http://localhost:8082/hello | grep -o '.*status":"pass".*redis":{"status":"pass".*rpc":{"status":"pass"'
+      interval: 5s
+      retries: 10
+      start_period: 4s
+      timeout: 10s
+
+  redis-datacenter:
+    profiles: ["all", "slave-datacenter"]
+    image: redis:6.2
+    ports:
+      - "6380:6379"
+    environment:
+      - loglevel=warning
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      retries: 10
+      start_period: 2s
+      timeout: 10s
+
+  dashboard:
+    profiles: ["all", "master-datacenter"]
+    image: ${REGISTRY}/${DBIMAGE}
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    environment:
+      - TYK_LOGLEVEL=${TYK_LOGLEVEL:-debug}
+      - TYK_DB_LICENSEKEY=${TYK_DB_LICENSE}
+    volumes:
+      - ../confs/${CONFIG}:/conf
+    depends_on:
+      - mongo
+      - redis
+    entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
+
+  gateway:
+    profiles: ["all", "master-datacenter"]  
+    image: ${REGISTRY}/${GWIMAGE}
+    ports:
+      - "8080:8080"
+    environment:
+        - TYK_GW_DBAPPCONFOPTIONS_CONNECTIONSTRING=http://dashboard:3000
+        - TYK_GW_POLICIES_POLICYCONNECTIONSTRING=http://dashboard:3000
+    volumes:
+      - ../confs/${CONFIG}:/conf
+    depends_on:
+      - redis
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    healthcheck:
+      test: curl -s --fail http://localhost:8080/hello | grep -o '.*status":"pass".*dashboard":{"status":"pass".*redis":{"status":"pass"'
+      interval: 5s
+      retries: 10
+      start_period: 4s
+      timeout: 10s
+
+  redis:
+    profiles: ["all", "master-datacenter"]
+    image: redis:6.0
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      retries: 10
+      start_period: 2s
+      timeout: 10s
+
+  mongo:
+    profiles: ["all", "master-datacenter"]
+    image: mongo:4.2
+    ports:
+      - "27017:27017"
+
+  pump:
+    profiles: ["all", "master-datacenter"]
+    image: ${REGISTRY}/${PUMPIMAGE}
+    volumes:
+      - ../confs/${CONFIG}:/conf
+      - /tmp/pump-data:/pump-data
+    depends_on:
+      - gateway
+      - mongo
+    entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
+
+  wait-master:
+    profiles: ["all", "master-datacenter"]
+    image: hello-world:linux
+    depends_on:
+        redis:
+            condition: service_healthy
+        gateway:
+            condition: service_healthy
+
+  wait-slave:
+    profiles: ["all", "slave-datacenter"]
+    image: hello-world:linux
+    depends_on:
+        redis-datacenter:
+            condition: service_healthy
+        gateway-datacenter:
+            condition: service_healthy
