@@ -1,6 +1,6 @@
+ENV ?= proha
+
 proha: env
-	@scripts/$(ENV)/dash-bootstrap.sh http://localhost:3000
-	@sleep 5
 	curl -s -XGET -H "Accept: application/json" "http://localhost:8080/smoke-test-api/get?arg=test"| jq -e '.args.arg == "test"'
 	curl -s -XGET -H "Accept: application/json" "http://localhost:8082/smoke-test-api/get?arg=test"| jq -e '.args.arg == "test"'
 

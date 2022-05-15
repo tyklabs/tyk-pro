@@ -1,10 +1,16 @@
 services:
   upstream:
+    networks:
+      - master-dc
+      - slave-dc
     profiles: ["all", "master-datacenter"]
     image: citizenstig/httpbin
     restart: always
 
   mdcb:
+    networks:
+      - master-dc
+      - shared
     profiles: ["all", "master-datacenter"]
     image: tykio/${MDCBIMAGE}
     ports:
@@ -19,6 +25,9 @@ services:
     - gateway
 
   gateway-datacenter:
+    networks:
+      - slave-dc
+      - shared
     profiles: ["all", "slave-datacenter"]
     image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
     ports:
@@ -40,6 +49,8 @@ services:
       timeout: 10s
 
   redis-datacenter:
+    networks:
+      - slave-dc
     profiles: ["all", "slave-datacenter"]
     image: redis:6.2
     ports:
@@ -54,6 +65,8 @@ services:
       timeout: 10s
 
   dashboard:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]
     image: ${REGISTRY}/${DBIMAGE}
     ports:
@@ -70,6 +83,8 @@ services:
     entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
 
   gateway:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]  
     image: ${REGISTRY}/${GWIMAGE}
     ports:
@@ -90,6 +105,8 @@ services:
       timeout: 10s
 
   redis:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]
     image: redis:6.0
     ports:
@@ -102,12 +119,16 @@ services:
       timeout: 10s
 
   mongo:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]
     image: mongo:4.2
     ports:
       - "27017:27017"
 
   pump:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]
     image: ${REGISTRY}/${PUMPIMAGE}
     volumes:
@@ -119,6 +140,8 @@ services:
     entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
 
   wait-master:
+    networks:
+      - master-dc
     profiles: ["all", "master-datacenter"]
     image: hello-world:linux
     depends_on:
@@ -128,6 +151,8 @@ services:
             condition: service_healthy
 
   wait-slave:
+    networks:
+      - slave-dc
     profiles: ["all", "slave-datacenter"]
     image: hello-world:linux
     depends_on:
@@ -135,3 +160,14 @@ services:
             condition: service_healthy
         gateway-datacenter:
             condition: service_healthy
+
+networks:
+  master-dc:
+    name: masetr-dc
+    driver: bridge
+  slave-dc:
+    name: slave-dc
+    driver: bridge
+  shared:
+    name: shared
+    driver: bridge  

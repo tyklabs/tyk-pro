@@ -1,3 +1,4 @@
+ENV ?= pro
 # <-- Should we leave an entry for each component test?
 tyk-gw: env
 	curl -s -XGET -H "Accept: application/json" "http://localhost:8080/test/get?arg=test"| jq -e '.args.arg == "test"'
