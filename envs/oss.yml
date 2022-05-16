@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   upstream:
     image: citizenstig/httpbin
@@ -27,7 +29,6 @@ services:
     image: ${REGISTRY}/${PUMPIMAGE}
     volumes:
       - ../confs/${CONFIG}:/conf
-# Watchout
       - ../data/${CONFIG}/pump-data:/pump-data
     depends_on:
       - gateway

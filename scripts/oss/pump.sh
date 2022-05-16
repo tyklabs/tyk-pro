@@ -66,8 +66,6 @@ curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" \
 echo "Adding a key for the added API..."
 KEY=$(curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" -XPOST --data @data/oss/key.json ${GWBASE}/tyk/keys | jq -r '.key')
 
-echo "THIS IS THE KEY : $KEY"
-
 # Hot reload gateway
 echo "Executing gateway hot reload..."
 curlf --header "x-tyk-authorization: 352d20ee67be67f6340b4c0605b044b7" \
