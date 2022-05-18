@@ -24,11 +24,14 @@ if [ -z $1 ]; then
 fi
 
 db_base=$1
+env=proha
 
 # 1. Create org using admin authentication
 orgid=$(curlf --header "admin-auth: 12345" \
-	      --data @data/org.json \
+	      --data @data/${env}/org.json \
 	      ${db_base}/admin/organisations | jq -r '.Meta')
+
+sed -i "" "s/TYK_GW_SLAVE_RPC_KEY=.*/TYK_GW_SLAVE_RPC_KEY=${orgid}/g" envs/${env}.env
 
 # 1a. Add orgid into user creation json
 user_json=$(jq --arg oid $orgid '. + { org_id: $oid }' <<<'{
@@ -44,6 +47,8 @@ user_auth=$(curlf --header "admin-auth: 12345" \
 		  --data "$user_json" \
 		  ${db_base}/admin/users | jq -r '.Message')
 
+sed -i "" "s/TYK_GW_SLAVE_API_KEY=.*/TYK_GW_SLAVE_API_KEY=${user_auth}/g" envs/${env}.env
+
 # 3. Get user id of newly created user using user authentication
 uid=$(curlf --header "authorization: $user_auth" \
 	    ${db_base}/api/users | jq -r '.users[0].id')
@@ -56,7 +61,7 @@ curlf --header "authorization: $user_auth" \
 # 5. Create API using dash API
 curlf --header "authorization: $user_auth" \
       --header "Content-Type:application/json" \
-      --data @data/api.json \
+      --data @data/${env}/api.json \
       ${db_base}/api/apis
 
 echo "DONE"
