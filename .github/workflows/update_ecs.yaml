@@ -6,7 +6,7 @@ env:
   SERVICE: "kikitest"
   CLUSTER: "kikitest"
   CONTAINER_NAME: "tyk"
-  IMAGE: "v4.0.0"
+  IMAGE: "754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master"
 
 jobs:
   deploy:
@@ -64,8 +64,8 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ./terraform/environment/task-definition.json
-          container-name: ${CONTAINER_NAME}
-          image: ${IMAGE}
+          container-name: tyk
+          image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
 
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
