@@ -3,10 +3,11 @@ on:
   pull_request:
 
 env:
-  SERVICE: "kikitest"
+  SERVICE: "tyk"
   CLUSTER: "kikitest"
   CONTAINER_NAME: "tyk"
-  IMAGE: "754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master"
+  REGISTRY: "754489498669.dkr.ecr.eu-central-1.amazonaws.com"
+  IMAGE: "tyk:v4.0.0"
 
 jobs:
   deploy:
@@ -64,13 +65,13 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@master
         with:
           task-definition: ./terraform/environment/task-definition.json
-          container-name: tyk
-          image: ${IMAGE}
+          container-name: ${CONTAINER_NAME}
+          image: ${REGISTRY}/${IMAGE}
 
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@master
         with:
           task-definition: ./terraform/environment/task-definition.json
-          service: tyk
-          cluster: kikitest
+          service: ${SERVICE}
+          cluster: ${CLUSTER}
           wait-for-service-stability: true
