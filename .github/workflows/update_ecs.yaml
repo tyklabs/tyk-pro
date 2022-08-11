@@ -61,14 +61,14 @@ jobs:
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@master
+        uses: aws-actions/amazon-ecs-render-task-definition@374ee96751fffe528c09b5f427848da60469bb55
         with:
           task-definition: ./terraform/environment/task-definition.json
           container-name: tyk
           image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master
 
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@master
+        uses: aws-actions/amazon-ecs-deploy-task-definition@374ee96751fffe528c09b5f427848da60469bb55
         with:
           task-definition: ./terraform/environment/task-definition.json
           service: tyk
