@@ -51,11 +51,18 @@ jobs:
         run: terraform validate -no-color
 
       - name: Download task definition
+        working-directory: ./terraform/environment
         run: |
           aws ecs describe-task-definition --task-definition ${CONTAINER_NAME}-${CLUSTER}-template --query taskDefinition > task-definition.json
 
+      - name: Describe task definition
+        working-directory: ./terraform/environment
+        run: |
+          cat task-definition.json
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
+        working-directory: ./terraform/environment
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: task-definition.json
