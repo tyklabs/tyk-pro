@@ -62,14 +62,14 @@ jobs:
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@master
+        uses: aws-actions/amazon-ecs-render-task-definition@v1.1.1
         with:
           task-definition: ./terraform/environment/task-definition.json
           container-name: ${{ env.CONTAINER }}
           image: ${{ env.REGISTRY }}/${{ env.IMAGE }}
 
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@master
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1.1.1
         with:
           task-definition: ./terraform/environment/task-definition.json
           service: ${{ env.SERVICE }}
