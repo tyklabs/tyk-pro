@@ -69,7 +69,7 @@ jobs:
           image: ${{ env.REGISTRY }}/${{ env.IMAGE }}
 
       - name: Deploy to Amazon ECS
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1.1.1
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1.4.9
         with:
           task-definition: ./terraform/environment/task-definition.json
           service: ${{ env.SERVICE }}
