@@ -65,8 +65,8 @@ jobs:
         uses: aws-actions/amazon-ecs-render-task-definition@master
         with:
           task-definition: ./terraform/environment/task-definition.json
-          container-name: tyk
-          image: ${REGISTRY}/${IMAGE}
+          container-name: ${{ env.CONTAINER }}
+          image: ${{ env.REGISTRY }}/${{ env.IMAGE }}
 
       - name: Deploy to Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@master
