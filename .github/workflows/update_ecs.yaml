@@ -72,6 +72,6 @@ jobs:
         uses: aws-actions/amazon-ecs-deploy-task-definition@master
         with:
           task-definition: ./terraform/environment/task-definition.json
-          service: ${SERVICE}
-          cluster: ${CLUSTER}
+          service: ${{ env.SERVICE }}
+          cluster: ${{ env.CLUSTER }}
           wait-for-service-stability: true
