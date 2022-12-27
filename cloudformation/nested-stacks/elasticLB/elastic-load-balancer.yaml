@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  TYKGatewaySubnetAZ1:
+    Description: 'Gateway Subnet Id for Availability Zone 1 '
+    Type: AWS::EC2::Subnet::Id
+  TYKGatewaySubnetAZ2:
+    Description: 'Gateway Subnet Id for Availability Zone 2 '
+    Type: AWS::EC2::Subnet::Id
+  TYKGatewaySubnetAZ3:
+    Description: 'Gateway Subnet Id for Availability Zone 3 '
+    Type: AWS::EC2::Subnet::Id
+  VPC:
+    Description: VPC to install the instances into
+    Type: AWS::EC2::VPC::Id
+  TYKGatewaySecurityGroup:
+    Description: Gateway security group ID
+    Type: String 
+
+Resources: 
+  TYKALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: TYKALBSecurityGroup Traffic
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+
+  ALBGatewaySecurityGroup:   ##Alb  Gateway Routing
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 8080
+      ToPort: 8080
+      SourceSecurityGroupId: !GetAtt TYKALBSecurityGroup.GroupId
+      GroupId: !Ref TYKGatewaySecurityGroup
+
+  ElasticLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: TYKElasticLoadBalancerALB
+      Subnets:
+      - !Ref TYKGatewaySubnetAZ1
+      - !Ref TYKGatewaySubnetAZ2
+      - !Ref TYKGatewaySubnetAZ3
+      SecurityGroups:
+      - !Ref TYKALBSecurityGroup
+
+  TykGatewayTargetGroup:   ### TargetGroup
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: TykGatewayTargetGroup2GW
+      VpcId: !Ref VPC
+      Port: 8080
+      Protocol: HTTP
+      HealthCheckPath: /hello
+      HealthCheckPort: 8080
+      HealthCheckProtocol: HTTP
+
+  TYKLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ElasticLoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+      - Type: forward
+        TargetGroupArn: !Ref TykGatewayTargetGroup
+
+
+Outputs:
+  TykGatewayTargetGroupName:
+    Description: "Elastic LB target group for gateway"
+    Value: !Ref TykGatewayTargetGroup
+    # Value: !GetAtt TykGatewayTargetGroup.TargetGroupFullName
+  DnsName:
+    Description: "The DNS name for the load balancer"
+    Value: !GetAtt ElasticLoadBalancer.DNSName

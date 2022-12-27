@@ -1,0 +1,330 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Description: TYK Single Gateway Application Cloudformation Stack
+
+Parameters:
+#Common
+  VPC:
+    Description: VPC to install the instances into
+    Type: AWS::EC2::VPC::Id
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+  AMISelect:
+    Description: >-
+      Context the cluster will be used in.  Common values are production,
+      testing and development.
+    Type: String
+    AllowedValues:
+      - RedHat
+      - AWSLinux
+#Gateway
+  GatewaySSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  GateWayInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKGatewaySubnet:
+    Description: Gateway Subnet Id
+    Type: List<AWS::EC2::Subnet::Id>
+  TYKGatewaySubDomain:
+    Description: "Tyk GateWay Subdomain "
+    Type: String
+    Default: "" #tykgw
+  TYKGateWayHTTPCIDR:
+    Description: "Tyk GateWay HTTP CIDR Block "
+    Type: String
+    Default: 0.0.0.0/0
+  TYKDashboardHTTPCIDR:
+    Description: "Tyk Dashboard HTTP CIDR Block "
+    Type: String
+    Default: 0.0.0.0/0
+  VolumeSizeTykInstances:
+    Description: "TYK Instance : size of the volume, in gibibytes (GiBs)."
+    Type: Number
+    Default: "16"
+  VolumeTypeTyk:
+    Description: 'TYK Instances Instance : volume type '
+    Type: String
+    Default: gp2
+#Elastic
+  ElastiCacheClusterCount:
+    Description: "Elasticache instance count "
+    Type: Number
+    Default: "2"
+  ElastiClusterInstanceType:
+    Description: How large of a box to run your cluster on
+    Type: String
+    Default: cache.t2.micro
+  ElastiCacheSubnets:
+    Description: Which subnets the EC2 instances should be deployed to.
+    Type: List<AWS::EC2::Subnet::Id>
+  CachePort:
+    Description: The port number on which each of the cache nodes will accept connections.
+    Type: Number
+    Default: 6379
+  EnableAtRestEncryptionEnabled:
+    Description: Whether you should enable at rest encryption
+    Default: true
+    Type: String
+    AllowedValues:
+      - true
+      - false
+#Dashboard
+  LicenseKey:
+    Description: "Dashboard License"
+    Type: String
+  DashboardSSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  DashboardInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKDashboardSubnet:
+    Description: Dashboard Subnet ID
+    Type: List<AWS::EC2::Subnet::Id>
+  TYKDBAdminUserName:
+    Description: TYK DASHBOARD ADMIN USERNAME
+    Type: String
+    Default: ""
+  TYKDBAdminOrganization:
+    Description: TYK DASHBOARD ADMIN ORGANIZATION
+    Type: String
+    Default: ""
+#Pump
+  PumpSSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  PumpInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKPumpSubnet:
+    Description: Pump Subnet ID
+    Type: CommaDelimitedList
+  PumpDbAdminUser: #Name of the Mongo Admin Password
+    Description: MongoDb Pump User Name
+    Type: String
+#DocDB
+  DBClusterName: 
+    Default: "TykDocDBCluster"
+    Description : "Cluster name"
+    Type: "String"
+    MinLength: "1"
+    MaxLength: "64"
+    AllowedPattern : "[a-zA-Z][a-zA-Z0-9]*(-[a-zA-Z0-9]+)*"
+    ConstraintDescription : "Must begin with a letter and contain only alphanumeric characters."
+
+  MongoAdminUsername:
+    NoEcho: "true"
+    Description : "The database admin account username"
+    Type: "String"
+    MinLength: "1"
+    MaxLength: "16"
+    AllowedPattern: "[a-zA-Z][a-zA-Z0-9]*"
+    ConstraintDescription : "Must begin with a letter and contain only alphanumeric characters."
+
+  DBInstanceClass:
+    Description : "Instance class. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"
+    Type: "String"
+    AllowedValues:
+      - db.t3.medium
+      - db.r5.large
+      - db.r5.xlarge
+      - db.r5.2xlarge
+      - db.r5.4xlarge
+      - db.r5.12xlarge
+      - db.r5.24xlarge                             
+    ConstraintDescription : "Instance type must be of the ones supported for the region. Please refer to: https://docs.aws.amazon.com/documentdb/latest/developerguide/db-instance-classes.html#db-instance-classes-by-region"  
+  
+  DocDBSubnets:
+    Description: DocDB Subnet ID
+    Type: CommaDelimitedList
+#Dns
+  TYKHostedZone:
+    Description: "TYK Hosted Zone "
+    Type: String
+    Default: "" #foobar.com.
+  TYKDashBoardSubDomain:
+    Description: Tyk Dashboard Subdomain
+    Type: String
+    Default: "" #tykdb
+
+Mappings:
+  DashboardAMI:
+    sa-east-1:
+      AWSLinux: ami-0ffa0baa64a113649
+      RedHat: ami-06cc22b622e2ae091
+  GatewayAMI:
+    sa-east-1:
+      AWSLinux: ami-091939245eeb37953
+      RedHat: ami-0f69a4a099b6b873c
+  PumpAMI:
+    sa-east-1:
+      AWSLinux: ami-05a229520e01a1151
+      RedHat: ami-0a76b668cb64cbda4
+
+Resources:
+  Base:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        VPC: !Ref VPC
+        Project: !Ref Project
+        Environment: !Ref Environment
+        TYKGateWayHTTPCIDR: !Ref TYKGateWayHTTPCIDR
+        TYKDashboardHTTPCIDR: !Ref TYKDashboardHTTPCIDR
+        CachePort: !Ref CachePort
+      TemplateURL: nested-stacks/base/security-groups.yaml
+  Dns:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        VPC: !Ref VPC
+        TYKHostedZone: !Ref TYKHostedZone
+        TYKGatewaySubDomain: !Ref TYKGatewaySubDomain
+        TYKDashBoardSubDomain: !Ref TYKDashBoardSubDomain
+        #Dependencies
+        GatewayIp: !GetAtt TYKGateway.Outputs.PublicIp
+        DashboardIp: !GetAtt TYKDashboard.Outputs.PublicIp
+      TemplateURL: nested-stacks/dns/dns.yaml
+  TYKGateway:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        Project: !Ref Project
+        Environment: !Ref Environment
+        ImageId: !FindInMap [GatewayAMI, !Ref AWS::Region, !Ref AMISelect]
+        GatewaySSHKey: !Ref GatewaySSHKey
+        GateWayInstanceType: !Ref GateWayInstanceType
+        TYKGatewaySubnet: !Join [",", !Ref TYKGatewaySubnet]
+        VolumeSizeTykInstances: !Ref VolumeSizeTykInstances
+        VolumeTypeTyk: !Ref VolumeTypeTyk
+        #Dependencies
+        ElasticCacheIp: !GetAtt ElasticCache.Outputs.PrimaryEndPointAddress
+        TYKGatewaySecurityGroup: !GetAtt Base.Outputs.TYKGatewaySecurityGroup
+        DashboardIp: !GetAtt TYKDashboard.Outputs.PrivateIp
+        SharedNodeSecret: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.SharedNodeSecretArn } ]
+        GWDashboardSecret: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.GWDashboardSecretArn } ]
+      TemplateURL: nested-stacks/tyk-instances/gateway.yaml
+
+  DocDB:
+    Type: AWS::CloudFormation::Stack
+    # DeletionPolicy: Retain
+    Properties: 
+      Parameters:
+        DBClusterName: !Ref DBClusterName
+        MasterUser: !Sub [ "{{resolve:secretsmanager:${arn}::username}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ]
+        MasterPassword: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ] 
+        DBInstanceClass: !Ref DBInstanceClass
+        DocDBSubnets: !Join [",", !Ref DocDBSubnets]
+        DocDBSecurityGroup: !GetAtt Base.Outputs.DocDBSecurityGroup
+      TemplateURL: nested-stacks/docDB/documentdb_full_stack.yaml
+
+
+  Secrets:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        TYKDBAdminUserName: !Ref TYKDBAdminUserName
+        PumpDbAdminUser: !Ref PumpDbAdminUser
+        MongoAdminUsername: !Ref MongoAdminUsername
+      TemplateURL: nested-stacks/secrets/secrets.yaml
+
+  ElasticCache:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        Project: !Ref Project
+        Environment: !Ref Environment
+        ElastiCacheClusterCount: !Ref ElastiCacheClusterCount
+        ElastiClusterInstanceType: !Ref ElastiClusterInstanceType
+        ElastiCacheSubnets: !Join [",", !Ref ElastiCacheSubnets]
+        CachePort: !Ref CachePort
+        EnableAtRestEncryptionEnabled: !Ref EnableAtRestEncryptionEnabled
+        #Dependencies
+        ElastiCacheSecurityGroup: !GetAtt Base.Outputs.ElastiCacheSecurityGroup
+      TemplateURL: nested-stacks/elasticCache/elastic-cache.yaml
+
+  TYKDashboard:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        Project: !Ref Project
+        Environment: !Ref Environment
+        ImageId: !FindInMap [DashboardAMI, !Ref AWS::Region, !Ref AMISelect]
+        LicenseKey: !Ref LicenseKey
+        DashboardSSHKey: !Ref DashboardSSHKey
+        DashboardInstanceType: !Ref DashboardInstanceType
+        TYKDashboardSubnet: !Join [",", !Ref TYKDashboardSubnet]
+        VolumeSizeTykInstances: !Ref VolumeSizeTykInstances
+        VolumeTypeTyk: !Ref VolumeTypeTyk
+        TYKDBAdminUserName: !Sub [ "{{resolve:secretsmanager:${arn}::username}}", { arn: !GetAtt  Secrets.Outputs.TYKDBAdminCredentialsArn } ]
+        TYKDBAdminUserPassword: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.TYKDBAdminCredentialsArn } ]
+        TYKDBAdminOrganization: !Ref TYKDBAdminOrganization
+        TYKGatewaySubDomain: !Ref TYKGatewaySubDomain
+        TYKHostedZone: !Ref TYKHostedZone
+        MongoAdminUsername: !Sub [ "{{resolve:secretsmanager:${arn}::username}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ]
+        MongoAdminPassword: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ]
+        #Dependencies
+        ElasticCacheIp: !GetAtt ElasticCache.Outputs.PrimaryEndPointAddress
+        TYKDashboardSecurityGroup: !GetAtt Base.Outputs.TYKDashboardSecurityGroup
+        MongoHost: !GetAtt DocDB.Outputs.ClusterEndpoint
+        MongoSlave1: !GetAtt DocDB.Outputs.ClusterReadEndpoint
+        SharedNodeSecret: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.SharedNodeSecretArn } ]
+        AdminSecretDashboard: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.AdminDashboardSecretArn } ]
+        GWDashboardSecret: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.GWDashboardSecretArn } ]
+      TemplateURL: nested-stacks/tyk-instances/dashboard-byol.yaml
+
+  TYKPump:
+    Type: AWS::CloudFormation::Stack
+    Properties: 
+      Parameters:
+        Project: !Ref Project
+        Environment: !Ref Environment
+        AMISelect: !Ref AMISelect
+        ImageId: !FindInMap [PumpAMI, !Ref AWS::Region, !Ref AMISelect]
+        PumpSSHKey: !Ref PumpSSHKey
+        PumpInstanceType: !Ref PumpInstanceType
+        TYKPumpSubnet: !Join [",", !Ref TYKPumpSubnet]
+        VolumeSizeTykInstances: !Ref VolumeSizeTykInstances
+        VolumeTypeTyk: !Ref VolumeTypeTyk
+        PumpDbAdminUser: !Sub [ "{{resolve:secretsmanager:${arn}::username}}", { arn: !GetAtt  Secrets.Outputs.PumpDbAdminCredentialsArn } ]
+        PumpDbAdminPassword: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.PumpDbAdminCredentialsArn } ]
+        #Dependencies
+        TYKPumpSecurityGroup: !GetAtt Base.Outputs.TYKPumpSecurityGroup
+        ElasticCacheIp: !GetAtt ElasticCache.Outputs.PrimaryEndPointAddress
+        MongoHost: !GetAtt DocDB.Outputs.ClusterEndpoint
+        MongoSlave1: !GetAtt DocDB.Outputs.ClusterReadEndpoint
+        MongoAdminUsername: !Sub [ "{{resolve:secretsmanager:${arn}::username}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ]
+        MongoAdminPassword: !Sub [ "{{resolve:secretsmanager:${arn}::password}}", { arn: !GetAtt  Secrets.Outputs.MongoAdminCredentialsArn } ]
+      TemplateURL: nested-stacks/tyk-instances/pump.yaml
+
+  
+Outputs:
+  TYKDashboardIP:
+    Description: Tyk Dashboard Public IP Address
+    Value: !GetAtt TYKDashboard.Outputs.PublicIp
+  TYKGatewayIp:
+    Description: Tyk gateway Load Balancer Dns Name
+    Value: !GetAtt TYKGateway.Outputs.PublicIp
+  TYKPumpIP:
+    Description: Tyk Dashboard Public IP Address
+    Value: !GetAtt TYKPump.Outputs.PrivateIp
+  RedisAddress:
+    Description: The DNS address of the primary read-write cache node.
+    Value: !GetAtt ElasticCache.Outputs.PrimaryEndPointAddress
+  MongoAddress:
+    Description: The connection endpoint for the mongo cluster (Aws DocDB)
+    Value: !GetAtt DocDB.Outputs.ClusterEndpoint

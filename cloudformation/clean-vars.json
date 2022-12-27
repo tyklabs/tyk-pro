@@ -1,0 +1,10 @@
+{
+  "vpc": "vpc-0bd30aa27b28ce574",
+  "private_subnet1": "subnet-0a78f42f37548db08",
+  "private_subnet2": "subnet-0eb0d36fbdfbff479",
+  "private_subnet3": "subnet-07976f727474ca9e4",
+  "pub_subnet1": "subnet-00c0c7aa9caab1282",
+  "pub_subnet2": "subnet-030ca51a467743059",
+  "pub_subnet3": "subnet-0a1b3465634506a53",
+  "ssh_key": "esteban"
+}

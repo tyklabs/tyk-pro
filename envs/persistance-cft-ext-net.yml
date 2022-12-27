@@ -1,0 +1,344 @@
+AWSTemplateFormatVersion: 2010-09-09
+Metadata:
+  Cluster: arn:aws:ecs:sa-east-1:754489498669:cluster/kiki-persistence-cluster
+Resources:
+  CloudMap:
+    Properties:
+      Description: Service Map for Docker Compose project kiki
+      Name: kiki.local
+      Vpc: vpc-0bd30aa27b28ce574
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+  LoadBalancer:
+    Properties:
+      LoadBalancerAttributes:
+      - Key: load_balancing.cross_zone.enabled
+        Value: "true"
+      Scheme: internet-facing
+      Subnets:
+      - subnet-0a78f42f37548db08
+      - subnet-00c0c7aa9caab1282
+      - subnet-0eb0d36fbdfbff479
+      - subnet-07976f727474ca9e4
+      - subnet-0a1b3465634506a53
+      - subnet-030ca51a467743059
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      Type: network
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  LogGroup:
+    Properties:
+      LogGroupName: /docker-compose/kiki
+    Type: AWS::Logs::LogGroup
+  MongoService:
+    DependsOn:
+    - MongoTCP27017Listener
+    Properties:
+      Cluster: arn:aws:ecs:sa-east-1:754489498669:cluster/kiki-persistence-cluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - ContainerName: mongo
+        ContainerPort: 27017
+        TargetGroupArn:
+          Ref: MongoTCP27017TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - sg-0c76f7ba8cb5478ee
+          Subnets:
+          - subnet-0a78f42f37548db08
+          - subnet-00c0c7aa9caab1282
+          - subnet-0eb0d36fbdfbff479
+          - subnet-07976f727474ca9e4
+          - subnet-0a1b3465634506a53
+          - subnet-030ca51a467743059
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - MongoServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      - Key: com.docker.compose.service
+        Value: mongo
+      TaskDefinition:
+        Ref: MongoTaskDefinition
+    Type: AWS::ECS::Service
+  MongoServiceDiscoveryEntry:
+    Properties:
+      Description: '"mongo" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: mongo
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  MongoTCP27017Listener:
+    Properties:
+      DefaultActions:
+      - ForwardConfig:
+          TargetGroups:
+          - TargetGroupArn:
+              Ref: MongoTCP27017TargetGroup
+        Type: forward
+      LoadBalancerArn:
+        Ref: LoadBalancer
+      Port: 27017
+      Protocol: TCP
+    Type: AWS::ElasticLoadBalancingV2::Listener
+  MongoTCP27017TargetGroup:
+    Properties:
+      Port: 27017
+      Protocol: TCP
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      TargetType: ip
+      VpcId: vpc-0bd30aa27b28ce574
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  MongoTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - sa-east-1.compute.internal
+        - kiki.local
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: kiki
+        Name: Mongo_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Mongo_ResolvConf_InitContainer
+        Essential: true
+        Image: docker.io/library/mongo:4.2@sha256:b919b2cf59e0a0b8e6730deb2c6ccec642e9d4bc1518e0a719766877c34179e2
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: kiki
+        Name: mongo
+        PortMappings:
+        - ContainerPort: 27017
+          HostPort: 27017
+          Protocol: tcp
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: MongoTaskExecutionRole
+      Family: kiki-mongo
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  MongoTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      - Key: com.docker.compose.service
+        Value: mongo
+    Type: AWS::IAM::Role
+  Mongoprivate27017Ingress:
+    Properties:
+      CidrIp: 0.0.0.0/0
+      Description: mongo:27017/tcp on mongo_private network
+      FromPort: 27017
+      GroupId: sg-0c76f7ba8cb5478ee
+      IpProtocol: TCP
+      ToPort: 27017
+    Type: AWS::EC2::SecurityGroupIngress
+  RedisService:
+    DependsOn:
+    - RedisTCP6379Listener
+    Properties:
+      Cluster: arn:aws:ecs:sa-east-1:754489498669:cluster/kiki-persistence-cluster
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+      - ContainerName: redis
+        ContainerPort: 6379
+        TargetGroupArn:
+          Ref: RedisTCP6379TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+          - sg-0b69c799431fe3c61
+          Subnets:
+          - subnet-0a78f42f37548db08
+          - subnet-00c0c7aa9caab1282
+          - subnet-0eb0d36fbdfbff479
+          - subnet-07976f727474ca9e4
+          - subnet-0a1b3465634506a53
+          - subnet-030ca51a467743059
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+      - RegistryArn:
+          Fn::GetAtt:
+          - RedisServiceDiscoveryEntry
+          - Arn
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      - Key: com.docker.compose.service
+        Value: redis
+      TaskDefinition:
+        Ref: RedisTaskDefinition
+    Type: AWS::ECS::Service
+  RedisServiceDiscoveryEntry:
+    Properties:
+      Description: '"redis" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+        - TTL: 60
+          Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: redis
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  RedisTCP6379Listener:
+    Properties:
+      DefaultActions:
+      - ForwardConfig:
+          TargetGroups:
+          - TargetGroupArn:
+              Ref: RedisTCP6379TargetGroup
+        Type: forward
+      LoadBalancerArn:
+        Ref: LoadBalancer
+      Port: 6379
+      Protocol: TCP
+    Type: AWS::ElasticLoadBalancingV2::Listener
+  RedisTCP6379TargetGroup:
+    Properties:
+      Port: 6379
+      Protocol: TCP
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      TargetType: ip
+      VpcId: vpc-0bd30aa27b28ce574
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  RedisTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+      - Command:
+        - sa-east-1.compute.internal
+        - kiki.local
+        Essential: false
+        Image: docker/ecs-searchdomain-sidecar:1.0
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: kiki
+        Name: Redis_ResolvConf_InitContainer
+      - DependsOn:
+        - Condition: SUCCESS
+          ContainerName: Redis_ResolvConf_InitContainer
+        Essential: true
+        Image: docker.io/library/redis:6.0@sha256:fc1eabe9b8c228524760aec9ecaa08188b2af9d49698d0f5960d6825b85b4ed7
+        LinuxParameters: {}
+        LogConfiguration:
+          LogDriver: awslogs
+          Options:
+            awslogs-group:
+              Ref: LogGroup
+            awslogs-region:
+              Ref: AWS::Region
+            awslogs-stream-prefix: kiki
+        Name: redis
+        PortMappings:
+        - ContainerPort: 6379
+          HostPort: 6379
+          Protocol: tcp
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: RedisTaskExecutionRole
+      Family: kiki-redis
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+      - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  RedisTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Condition: {}
+          Effect: Allow
+          Principal:
+            Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+      - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+      - Key: com.docker.compose.project
+        Value: kiki
+      - Key: com.docker.compose.service
+        Value: redis
+    Type: AWS::IAM::Role
+  Redisprivate6379Ingress:
+    Properties:
+      CidrIp: 0.0.0.0/0
+      Description: redis:6379/tcp on redis_private network
+      FromPort: 6379
+      GroupId: sg-0b69c799431fe3c61
+      IpProtocol: TCP
+      ToPort: 6379
+    Type: AWS::EC2::SecurityGroupIngress

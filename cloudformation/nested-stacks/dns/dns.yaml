@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Dns Stack
+Parameters:
+#Common
+  VPC:
+    Description: VPC to install the instances into
+    Type: AWS::EC2::VPC::Id
+#Custom
+  TYKHostedZone:
+    Description: "TYK Hosted Zone "
+    Type: String
+    Default: "" #foobar.com.
+  TYKGatewaySubDomain:
+    Description: "Tyk GateWay Subdomain "
+    Type: String
+    Default: "" #tykgw
+  TYKDashBoardSubDomain:
+    Description: Tyk Dashboard Subdomain
+    Type: String
+    Default: "" #tykdb
+#Dependencies
+  GatewayIp:    #TYKGatewayInstance.PrivateIp
+    Description: "Tyk Gateway internal IP address"
+    Type: String
+  DashboardIp:  #TYKDashboardInstance.PrivateIp
+    Description: "Tyk Dashboard internal IP address"
+    Type: String
+
+
+Resources:
+  TYKPrivateHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      HostedZoneConfig:
+        Comment: My hosted zone for example.com
+      Name: !Ref "TYKHostedZone"
+      VPCs:
+        - VPCId:
+            Ref: VPC
+          VPCRegion:
+            Ref: AWS::Region
+
+  TykGateWayDNSRecord:
+    Type: AWS::Route53::RecordSet
+    # DependsOn:
+    #   - TYKGatewayInstance
+    Properties:
+      HostedZoneId: !Ref "TYKPrivateHostedZone"
+      Comment: DNS name for TYK Gateway.
+      Name: !Join ["", [!Ref "TYKGatewaySubDomain", ., !Ref "TYKHostedZone"]]
+      Type: A
+      TTL: "900"
+      ResourceRecords:
+        - !Ref GatewayIp 
+
+  TykDashboardDNSRecord:
+    Type: AWS::Route53::RecordSet
+    # DependsOn:
+    #   - TYKDashboardInstance
+    Properties:
+      HostedZoneId: !Ref "TYKPrivateHostedZone"
+      Comment: DNS name for TYK Gateway.
+      Name: !Join ["", [!Ref "TYKDashBoardSubDomain", ., !Ref "TYKHostedZone"]]
+      Type: A
+      TTL: "900"
+      ResourceRecords:
+        - !Ref DashboardIp
+
+# Outputs:

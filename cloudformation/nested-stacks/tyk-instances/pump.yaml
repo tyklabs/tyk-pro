@@ -1,0 +1,179 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Tyk-Pump Application Cloudformation Stack
+Parameters:
+#Common
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+  AMISelect:
+    Description: >-
+      Context the cluster will be used in.  Common values are production,
+      testing and development.
+    Type: String
+    AllowedValues:
+      - RedHat
+      - AWSLinux
+  ImageId:
+    Description: Dashboard image id (AMI)
+    Type: AWS::EC2::Image::Id
+#Custom
+  PumpSSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  PumpInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKPumpSubnet:
+    Description: Pump Subnet ID
+    Type: CommaDelimitedList
+  VolumeSizeTykInstances:
+    Description: "TYK Instance : size of the volume, in gibibytes (GiBs)."
+    Type: Number
+    Default: "16"
+  VolumeTypeTyk:
+    Description: "TYK Instances Instance : volume type "
+    Type: String
+    Default: gp2
+  PumpDbAdminUser: #Name of the Mongo Admin Password
+    Description: MongoDb Pump User Name
+    Type: String
+  PumpDbAdminPassword: #Name of the Mongo Admin Password
+    Description: MongoDb Pump User Password
+    Type: String
+    NoEcho: true
+#Dependencies
+  TYKPumpSecurityGroup:
+    Description: Tyk Pump security group ID
+    Type: String 
+  ElasticCacheIp:
+    Description: "Elastic cluster endpoint address"
+    Type: String
+  MongoHost: #TYKMongo.PrivateIp
+    Description: "Mongo master private IP"
+    Type: String
+  MongoSlave1: #TYKMongoSlave1.PrivateIp
+    Description: "Mongo slave1 private IP"
+    Type: String
+  MongoAdminUsername: #Name of the Mongo Admin Username
+    Description: MongoDb Admin Username
+    Type: String
+  MongoAdminPassword: #Name of the Mongo Admin Password
+    Description: MongoDb Admin User Password
+    Type: String
+    NoEcho: true
+
+Resources:
+  TYKPumpInstance:
+    Type: AWS::EC2::Instance
+    Metadata:
+      AWS::CloudFormation::Init:
+        R:
+          files:
+            /etc/yum.repos.d/mongodb-org-5.0.repo:
+              content: |
+                [mongodb-org-5.0]
+                name=MongoDB Repository
+                baseurl=https://repo.mongodb.org/yum/redhat/$releasever/mongodb-org/5.0/x86_64/
+                gpgcheck=1
+                enabled=1
+                gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
+              encoding: plain
+              mode : "000644"
+              owner: root
+              group: root
+        A:
+          files:
+            /etc/yum.repos.d/mongodb-org-5.0.repo:
+              content: |
+                [mongodb-org-5.0]
+                name=MongoDB Repository
+                baseurl=https://repo.mongodb.org/yum/amazon/2/mongodb-org/5.0/x86_64/
+                gpgcheck=1
+                enabled=1
+                gpgkey=https://www.mongodb.org/static/pgp/server-5.0.asc
+              encoding: plain
+              mode : "000644"
+              owner: root
+              group: root
+        configSets:
+          Redhat:
+            - "R"
+          AWSLinux:
+            - "A"
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvdf
+          Ebs:
+            DeleteOnTermination: true
+            VolumeSize: !Ref VolumeSizeTykInstances
+            VolumeType: !Ref VolumeTypeTyk
+      EbsOptimized: false
+      ImageId: !Ref ImageId
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref PumpInstanceType
+      KeyName: !Ref PumpSSHKey
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash
+              sudo yum update -y
+              # Install the files and packages from the metadata
+              sudo yum install -y aws-cfn-bootstrap
+              /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource TYKPumpInstance --configsets ${Distro} --region ${AWS::Region}
+              # Start up the cfn-hup daemon to listen for changes to the EC2 metadata
+              sudo /opt/aws/bin/cfn-hup
+              echo TYK_PMP_ANALYTICSSTORAGECONFIG_REDISUSESSL=true >> /etc/default/tyk-pump
+              echo TYK_PMP_ANALYTICSSTORAGECONFIG_REDISSSLINSECURESKIPVERIFY=true >> /etc/default/tyk-pump
+
+              sudo yum install -y mongodb-org
+
+              mongo admin --host ${MongoHost}:27017 -u ${mongoAdminUsername} -p ${mongoAdminPasswd} --eval "db.getSiblingDB('tyk_analytics').createUser({user:'"${PumpDbUser}"',pwd:'"${PumpDbUserPassword}"',roles:[{role:'dbOwner', db:'tyk_analytics'},{role:'readWrite', db:'tyk_analytics'},{role:'read', db:'tyk_analytics'}]})" >> /pumpuser.log
+
+              sudo /opt/tyk-pump/install/setup.sh --redishost=${RedisHost} --redisport=6379 --mongo=mongodb://${PumpDbUser}:${PumpDbUserPassword}@${MongoHost},${MongoSlave1}:27017/tyk_analytics
+              sudo service tyk-pump start
+              # Signal the status from cfn-init
+              /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource TYKPumpInstance --region ${AWS::Region}
+            - {
+                Distro: !Ref AMISelect,
+                RedisHost: !Ref ElasticCacheIp,
+                MongoHost: !Ref MongoHost ,
+                MongoSlave1: !Ref MongoSlave1 ,
+                PumpDbUser: !Ref PumpDbAdminUser,
+                PumpDbUserPassword: !Ref PumpDbAdminPassword,
+                mongoAdminUsername: !Ref MongoAdminUsername,
+                mongoAdminPasswd: !Ref MongoAdminPassword,
+              }
+      Monitoring: false
+      SecurityGroupIds:
+        - !Ref TYKPumpSecurityGroup
+      SourceDestCheck: true
+      SubnetId: !Select [0, !Ref TYKPumpSubnet]
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK Pump, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK Pump
+        - Key: Environment
+          Value: !Ref Environment
+      Tenancy: default
+
+Outputs:
+  PrivateIp:
+    Description: The private IP address of the specified instance
+    Value: !GetAtt TYKPumpInstance.PrivateIp
+  AvailabilityZone:
+    Description: The Availability Zone where the specified instance is launched
+    Value: !GetAtt TYKPumpInstance.AvailabilityZone
+  PrivateDnsName:
+    Description: The private DNS name of the specified instance
+    Value: !GetAtt TYKPumpInstance.PrivateDnsName

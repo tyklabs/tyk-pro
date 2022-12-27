@@ -1,0 +1,55 @@
+{
+    "Stacks": [
+        {
+            "StackId": "arn:aws:cloudformation:sa-east-1:754489498669:stack/tyk-aws-infra-esteban/6cc7d9a0-dd58-11ec-9e05-0a6d9faaeda6",
+            "StackName": "tyk-aws-infra-esteban",
+            "ChangeSetId": "arn:aws:cloudformation:sa-east-1:754489498669:changeSet/awscli-cloudformation-package-deploy-1653613238/7c942a38-89d1-401d-8122-7eb76fc5db85",
+            "Description": "This stack deploys the resources required for tyk deployment",
+            "CreationTime": "2022-05-27T01:00:39.463000+00:00",
+            "LastUpdatedTime": "2022-05-27T01:00:45.086000+00:00",
+            "RollbackConfiguration": {},
+            "StackStatus": "CREATE_COMPLETE",
+            "DisableRollback": false,
+            "NotificationARNs": [],
+            "Outputs": [
+                {
+                    "OutputKey": "PublicSubnetOne",
+                    "OutputValue": "subnet-00c0c7aa9caab1282"
+                },
+                {
+                    "OutputKey": "VpcId",
+                    "OutputValue": "vpc-0bd30aa27b28ce574"
+                },
+                {
+                    "OutputKey": "PrivateSubnetTwo",
+                    "OutputValue": "subnet-0eb0d36fbdfbff479"
+                },
+                {
+                    "OutputKey": "PublicSubnetTwo",
+                    "OutputValue": "subnet-030ca51a467743059"
+                },
+                {
+                    "OutputKey": "PublicSubnetThree",
+                    "OutputValue": "subnet-0a1b3465634506a53"
+                },
+                {
+                    "OutputKey": "PrivateSubnetThree",
+                    "OutputValue": "subnet-07976f727474ca9e4"
+                },
+                {
+                    "OutputKey": "PrivateSubnetOne",
+                    "OutputValue": "subnet-0a78f42f37548db08"
+                },
+                {
+                    "OutputKey": "StackName",
+                    "OutputValue": "tyk-aws-infra-esteban"
+                }
+            ],
+            "Tags": [],
+            "EnableTerminationProtection": false,
+            "DriftInformation": {
+                "StackDriftStatus": "NOT_CHECKED"
+            }
+        }
+    ]
+}

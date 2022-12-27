@@ -1,0 +1,178 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Security group configuration for tyk installation
+Parameters:
+  VPC:
+    Description: VPC to install the instances into
+    Type: AWS::EC2::VPC::Id
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+  TYKGateWayHTTPCIDR:
+    Description: "Tyk GateWay HTTP CIDR Block "
+    Type: String
+    Default: 0.0.0.0/0
+  TYKDashboardHTTPCIDR:
+    Description: "Tyk Dashboard HTTP CIDR Block "
+    Type: String
+    Default: 0.0.0.0/0
+  CachePort:
+    Description: The port number on which each of the cache nodes will accept connections.
+    Type: Number
+    Default: 6379
+
+Resources:
+  ElastiCacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Redis Blank Security Group
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Join: [":", [Cache, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value:
+            Ref: Project
+        - Key: Purpose
+          Value: Redis access
+        - Key: Environment
+          Value:
+            Ref: Environment
+
+  TYKGatewaySecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: TYK Gateway Traffic
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 8080
+          ToPort: 8080
+          CidrIp: !Ref TYKGateWayHTTPCIDR
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK traffic only
+
+  TYKDashboardSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: TYK Dashboard Traffic
+      VpcId:
+        Ref: VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 3000
+          ToPort: 3000
+          CidrIp: !Ref TYKDashboardHTTPCIDR
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK traffic only
+
+  TYKPumpSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: TYK Pump Traffic
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK traffic only
+
+  DocDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: DocDB Traffic
+      VpcId:
+        Ref: VPC
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK traffic only
+
+  
+  #### ElastiCache Ingress
+
+  ElastiCacheSecurityGroupIngressGateway: ##Elasticache Gateway
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: !Ref CachePort
+      ToPort: !Ref CachePort
+      SourceSecurityGroupId: !Ref TYKGatewaySecurityGroup
+      GroupId: !Ref ElastiCacheSecurityGroup
+
+  ElastiCacheSecurityGroupIngressDashboard: ## ElastiCache Dashboard
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: !Ref CachePort
+      ToPort: !Ref CachePort
+      SourceSecurityGroupId: !Ref TYKDashboardSecurityGroup
+      GroupId: !Ref ElastiCacheSecurityGroup
+
+  ElastiCacheSecurityGroupIngressPump: ##Elasticache Gateway
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: !Ref CachePort
+      ToPort: !Ref CachePort
+      SourceSecurityGroupId: !Ref TYKPumpSecurityGroup
+      GroupId: !Ref ElastiCacheSecurityGroup
+
+  DocDBSecurityGroupIngressDashboard:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 27017
+      ToPort: 27017
+      SourceSecurityGroupId: !Ref TYKDashboardSecurityGroup
+      GroupId: !Ref DocDBSecurityGroup
+
+  DocDBSecurityGroupIngressPump:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      IpProtocol: tcp
+      FromPort: 27017
+      ToPort: 27017
+      SourceSecurityGroupId: !Ref TYKPumpSecurityGroup
+      GroupId: !Ref DocDBSecurityGroup
+
+
+Outputs:
+  ElastiCacheSecurityGroup:
+    Description: Elastic Cache security group ID
+    Value: !GetAtt  ElastiCacheSecurityGroup.GroupId
+  TYKGatewaySecurityGroup:
+    Description: Gateway security group ID
+    Value: !GetAtt  TYKGatewaySecurityGroup.GroupId
+  TYKDashboardSecurityGroup:
+    Description: Dashboard security group ID
+    Value: !GetAtt TYKDashboardSecurityGroup.GroupId
+  TYKPumpSecurityGroup:
+    Description: Pump security group ID
+    Value: !GetAtt TYKPumpSecurityGroup.GroupId
+  DocDBSecurityGroup:
+    Description: DocDB security group ID
+    Value: !GetAtt DocDBSecurityGroup.GroupId

@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: TYK Single Gateway Cloudformation Stack
+Parameters:
+#Common
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+  ImageId:
+    Description: Gateway image id (AMI)
+    Type: AWS::EC2::Image::Id
+#Custom
+  GatewaySSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  GateWayInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKGatewaySubnet:
+    Description: Gateway Subnet Id
+    Type: CommaDelimitedList
+  VolumeSizeTykInstances:
+    Description: "TYK Instance : size of the volume, in gibibytes (GiBs)."
+    Type: Number
+    Default: "16"
+  VolumeTypeTyk:
+    Description: 'TYK Instances Instance : volume type '
+    Type: String
+    Default: gp2
+#Dependencies
+  ElasticCacheIp:
+    Description: "Elastic cluster endpoint address"
+    Type: String
+  TYKGatewaySecurityGroup:
+    Description: Gateway security group ID
+    Type: String 
+  DashboardIp:
+    Description: "Tyk Dashboard internal IP address"
+    Type: String
+  SharedNodeSecret:
+    Description: "Tyk Dashboard shared node secret"
+    Type: String
+    NoEcho: true
+  GWDashboardSecret:
+    Description: "Tyk Dashboard secret used by the tyk gateway"
+    Type: String
+    NoEcho: true
+
+Resources:
+
+  TYKGatewayInstance:
+    Type: 'AWS::EC2::Instance'
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvdf
+          Ebs:
+            DeleteOnTermination: true
+            VolumeSize: !Ref VolumeSizeTykInstances
+            VolumeType: !Ref VolumeTypeTyk
+      EbsOptimized: false
+      ImageId: !Ref ImageId
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType: !Ref GateWayInstanceType
+      KeyName: !Ref GatewaySSHKey
+      UserData:
+        'Fn::Base64':
+          'Fn::Sub':
+            - |
+              #!/bin/bash
+
+              sudo -s 
+              /opt/tyk-gateway/install/setup.sh --dashboard=1 --listenport=8080
+              echo TYK_GW_STORAGE_HOST=${RedisHost} >> /etc/default/tyk-gateway
+              echo TYK_GW_DBAPPCONFOPTIONS_CONNECTIONSTRING=http://${DashboardDomain}:3000 >> /etc/default/tyk-gateway
+              echo TYK_GW_POLICIES_POLICYCONNECTIONSTRING=http://${DashboardDomain}:3000 >> /etc/default/tyk-gateway
+              echo TYK_GW_ANALYTICSCONFIG_ENABLEGEOIP=true >> /etc/default/tyk-gateway
+              echo TYK_GW_ANALYTICSCONFIG_GEOIPDBLOCATION=/opt/tyk-gateway/GeoLite2-City.mmdb >> /etc/default/tyk-gateway
+              echo TYK_GW_STORAGE_USESSL=true >> /etc/default/tyk-gateway
+              echo TYK_GW_NODESECRET=${SharedSecret} >> /etc/default/tyk-gateway
+              echo TYK_GW_SECRET=${GWDashboardSecret}  >> /etc/default/tyk-gateway
+              systemctl restart tyk-gateway
+
+            - {
+                RedisHost: !Ref ElasticCacheIp,
+                DashboardDomain: !Ref DashboardIp,
+                SharedSecret: !Ref SharedNodeSecret,
+                GWDashboardSecret: !Ref GWDashboardSecret,
+              }
+
+      Monitoring: false
+      SecurityGroupIds:
+      - !Ref TYKGatewaySecurityGroup
+      SourceDestCheck: true
+      SubnetId:
+        Fn::Select: [0, !Ref TYKGatewaySubnet]
+      Tags:
+      - Key: Name
+        Value: !Join [':', [TYK GateWay, !Ref 'AWS::StackName']]
+      - Key: Project
+        Value: !Ref Project
+      - Key: Purpose
+        Value: TYK GateWay
+      - Key: Environment
+        Value: !Ref Environment
+      Tenancy: default
+Outputs:
+  PrivateIp:
+    Description: The private IP address of the specified instance
+    Value: !GetAtt TYKGatewayInstance.PrivateIp
+  AvailabilityZone:
+    Description: The Availability Zone where the specified instance is launched
+    Value: !GetAtt TYKGatewayInstance.AvailabilityZone
+  PrivateDnsName:
+    Description: The private DNS name of the specified instance
+    Value: !GetAtt TYKGatewayInstance.PrivateDnsName
+  PublicDnsName:
+    Description: The public DNS name of the specified instance
+    Value: !GetAtt TYKGatewayInstance.PublicDnsName
+  PublicIp:
+    Description: The public IP address of the specified instance
+    Value: !GetAtt TYKGatewayInstance.PublicIp

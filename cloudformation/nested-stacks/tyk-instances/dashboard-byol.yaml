@@ -1,0 +1,186 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Tyk-Dashboard Application Cloudformation Stack
+Parameters:
+#Common
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+#Custom
+  ImageId:
+    Description: Dashboard image id (AMI)
+    Type: AWS::EC2::Image::Id
+  LicenseKey:
+    Description: "Dashboard License"
+    Type: String
+  DashboardSSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  DashboardInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  TYKDashboardSubnet:
+    Description: Dashboard Subnet ID
+    Type: CommaDelimitedList
+  VolumeSizeTykInstances:
+    Description: "TYK Instance : size of the volume, in gibibytes (GiBs)."
+    Type: Number
+    Default: "16"
+  VolumeTypeTyk:
+    Description: 'TYK Instances Instance : volume type '
+    Type: String
+    Default: gp2
+  TYKDBAdminUserName:
+    Description: TYK DASHBOARD ADMIN USERNAME
+    Type: String
+    Default: ""
+  TYKDBAdminUserPassword:
+    Description: TYK DASHBOARD ADMIN PASSWORD
+    Type: String
+    Default: ""
+    NoEcho: true
+  TYKDBAdminOrganization:
+    Description: TYK DASHBOARD ADMIN ORGANIZATION
+    Type: String
+    Default: ""
+  TYKGatewaySubDomain:
+    Description: "Tyk GateWay Subdomain "
+    Type: String
+    Default: "" #tykgw
+  TYKHostedZone:
+    Description: "TYK Hosted Zone "
+    Type: String
+    Default: "" #foobar.com.
+  MongoAdminUsername: #Name of the Mongo Admin Username
+    Description: MongoDb Admin Username
+    Type: String
+  MongoAdminPassword: #Name of the Mongo Admin Password
+    Description: MongoDb Admin User Password
+    Type: String
+    NoEcho: true
+#Dependencies
+  ElasticCacheIp:
+    Description: "Elastic cluster endpoint address"
+    Type: String
+  TYKDashboardSecurityGroup:
+    Description: Tyk Dashboard security group ID
+    Type: String 
+  MongoHost: #TYKMongo.PrivateIp
+    Description: "Mongo master private IP"
+    Type: String
+  MongoSlave1: #TYKMongoSlave1.PrivateIp
+    Description: "Mongo slave1 private IP"
+    Type: String
+  SharedNodeSecret:
+    Description: "Tyk Dashboard shared node secret"
+    Type: String
+    NoEcho: true
+  AdminSecretDashboard: #TYKSecrets.AdminSecretDashboard
+    Description: "Tyk Dashboard Admin secret"
+    Type: String
+    NoEcho: true
+  GWDashboardSecret: #TYKSecrets.GWDashboardSecret
+    Description: "Tyk Dashboard secret used by the tyk gateway"
+    Type: String
+    NoEcho: true
+
+Resources:
+  TYKDashboardInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvdf
+          Ebs:
+            DeleteOnTermination: true
+            VolumeSize:
+              Ref: VolumeSizeTykInstances
+            VolumeType:
+              Ref: VolumeTypeTyk
+      EbsOptimized: false
+      ImageId: !Ref ImageId
+      InstanceInitiatedShutdownBehavior: stop
+      InstanceType:
+        Ref: DashboardInstanceType
+      KeyName:
+        Ref: DashboardSSHKey
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+            - |
+              #!/bin/bash
+
+              sudo /opt/tyk-dashboard/install/setup.sh --listenport=3000
+
+              echo TYK_DB_LICENSEKEY=${License} >> /etc/default/tyk-dashboard 
+              echo TYK_DB_TYKAPI_HOST=http://${GateWayHost} >> /etc/default/tyk-dashboard
+              echo TYK_DB_LISTENPORT=3000 >> /etc/default/tyk-dashboard 
+              echo TYK_DB_TYKAPI_PORT=8080 >> /etc/default/tyk-dashboard
+              echo TYK_DB_MONGOURL=${MongoAdmin}:${MongoPasswd}@${MongoHost},${MongoSlave1}:27017/tyk_analitycs >> /etc/default/tyk-dashboard
+              echo TYK_DB_REDISHOST=${RedisHost} >> /etc/default/tyk-dashboard
+              echo TYK_DB_REDISUSESSL=true >> /etc/default/tyk-dashboard
+              echo TYK_DB_NODESECRET=${SharedSecret} >> /etc/default/tyk-dashboard
+              echo TYK_DB_ADMINSECRET=${AdminSecret} >> /etc/default/tyk-dashboard
+              echo TYK_DB_TYKAPI_SECRET=${GWDashboardSecret}  >> /etc/default/tyk-dashboard
+
+              sudo systemctl restart tyk-dashboard
+
+              sleep 15
+
+              chmod +x /home/ec2-user/bootstrap.sh
+              export TYK_DB_ADMINSECRET=${AdminSecret}
+
+              /home/ec2-user/bootstrap.sh localhost ${AdminOrganization} ${AdminUserName} ${AdminUserPassword}  > /user_data.log
+
+            - {
+                RedisHost: !Ref ElasticCacheIp,
+                MongoHost: !Ref MongoHost,
+                MongoSlave1: !Ref MongoSlave1,
+                GateWayHost: !Join [ "", [!Ref TYKGatewaySubDomain, ., !Ref "TYKHostedZone"],],
+                MongoAdmin: !Ref MongoAdminUsername,
+                MongoPasswd: !Ref MongoAdminPassword,
+                SharedSecret: !Ref SharedNodeSecret,
+                AdminSecret: !Ref AdminSecretDashboard,
+                GWDashboardSecret: !Ref GWDashboardSecret,
+                AdminUserPassword: !Ref TYKDBAdminUserPassword,
+                AdminUserName: !Ref TYKDBAdminUserName,
+                AdminOrganization: !Ref TYKDBAdminOrganization,
+                License: !Ref LicenseKey,
+              }
+      Monitoring: false
+      SecurityGroupIds:
+        - !Ref TYKDashboardSecurityGroup
+      SourceDestCheck: true
+      SubnetId: !Select [0, !Ref TYKDashboardSubnet]
+      Tags:
+        - Key: Name
+          Value: !Join [":", [TYK Dashboard, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: TYK Dashboard
+        - Key: Environment
+          Value: !Ref Environment
+      Tenancy: default
+
+Outputs:
+  PrivateIp:
+    Description: The private IP address of the specified instance
+    Value: !GetAtt TYKDashboardInstance.PrivateIp
+  AvailabilityZone:
+    Description: The Availability Zone where the specified instance is launched
+    Value: !GetAtt TYKDashboardInstance.AvailabilityZone
+  PrivateDnsName:
+    Description: The private DNS name of the specified instance
+    Value: !GetAtt TYKDashboardInstance.PrivateDnsName
+  PublicDnsName:
+    Description: The public DNS name of the specified instance
+    Value: !GetAtt TYKDashboardInstance.PublicDnsName
+  PublicIp:
+    Description: The public IP address of the specified instance
+    Value: !GetAtt TYKDashboardInstance.PublicIp

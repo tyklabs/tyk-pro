@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: TYK Single Gateway Cloudformation Stack
+Parameters:
+#Common
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+#Custom
+  ImageId:
+    Description: Gateway image id (AMI)
+    Type: AWS::EC2::Image::Id
+  GatewaySSHKey:
+    Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  GateWayInstanceType:
+    Description: Type of ec2 instance
+    Type: String
+    Default: t2.small
+  # TYKGatewaySubnet:
+  #   Description: Gateway Subnet Id list, must contain 3 subnets within 3 Availability Zones
+  #   Type: CommaDelimitedList
+  TYKGatewaySubnetAZ1:
+    Description: 'Availability Zone name for Gateway Subnet 1 '
+    Type: String
+  TYKGatewaySubnetAZ2:
+    Description: 'Availability Zone name for Gateway Subnet 2 '
+    Type: String
+  TYKGatewaySubnetAZ3:
+    Description: 'Availability Zone name for Gateway Subnet 3 '
+    Type: String
+  # VolumeSizeTykInstances:
+  #   Description: "TYK Instance : size of the volume, in gibibytes (GiBs)."
+  #   Type: Number
+  #   Default: "16"
+  # VolumeTypeTyk:
+  #   Description: 'TYK Instances Instance : volume type '
+  #   Type: String
+  #   Default: gp2
+  AutoScalingMaxCount:
+    Description: 'Auto Scaling Group maximum instance count . '
+    Type: Number
+#Dependencies
+  ElasticCacheIp:
+    Description: "Elastic cluster endpoint address"
+    Type: String
+  TYKGatewaySecurityGroup:
+    Description: Gateway security group ID
+    Type: String 
+  DashboardIp:
+    Description: "Tyk Dashboard internal IP address"
+    Type: String
+  SharedNodeSecret:
+    Description: "Tyk Dashboard shared node secret"
+    Type: String
+    NoEcho: true
+  GWDashboardSecret:
+    Description: "Tyk Dashboard secret used by the tyk gateway"
+    Type: String
+    NoEcho: true
+  TykGatewayTargetGroup:
+    Description: "Target group full name for gateway Load Balancer"
+    Type: String
+
+Resources:
+  ##AutoScalingGroup
+  TykGatewayGroup:
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        MinInstancesInService: 2
+        MaxBatchSize: 1
+        PauseTime: PT15M
+        WaitOnResourceSignals: false
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      LaunchConfigurationName: !Ref 'LaunchConfig'
+      MinSize: '2'
+      MaxSize: !Ref AutoScalingMaxCount
+      VPCZoneIdentifier:
+      - !Ref TYKGatewaySubnetAZ1
+      - !Ref TYKGatewaySubnetAZ2
+      - !Ref TYKGatewaySubnetAZ3
+      TargetGroupARNs:
+      - !Ref TykGatewayTargetGroup
+
+  LaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Metadata:
+      Comment: TYK Gateway implementation on AWS EC2 Instance
+    Properties:
+      KeyName:
+        Ref: GatewaySSHKey
+      ImageId: !Ref ImageId
+      SecurityGroups: [!Ref 'TYKGatewaySecurityGroup']
+      InstanceType:
+        Ref: GateWayInstanceType
+      UserData:
+        Fn::Base64:
+          Fn::Sub:
+          - |
+            #!/bin/bash
+            sudo -s 
+
+            yum update -y aws-cfn-bootstrap
+            /opt/aws/bin/cfn-init -v --stack ${AWS::StackName}  --resource LaunchConfig --region ${AWS::Region}
+            /opt/tyk-gateway/install/setup.sh --dashboard=1 --listenport=8080
+            echo TYK_GW_STORAGE_HOST=${RedisHost} >> /etc/default/tyk-gateway
+            echo TYK_GW_DBAPPCONFOPTIONS_CONNECTIONSTRING=http://${DashboardDomain}:3000 >> /etc/default/tyk-gateway
+            echo TYK_GW_POLICIES_POLICYCONNECTIONSTRING=http://${DashboardDomain}:3000 >> /etc/default/tyk-gateway
+            echo TYK_GW_ANALYTICSCONFIG_ENABLEGEOIP=true >> /etc/default/tyk-gateway
+            echo TYK_GW_ANALYTICSCONFIG_GEOIPDBLOCATION=/opt/tyk-gateway/GeoLite2-City.mmdb >> /etc/default/tyk-gateway
+            echo TYK_GW_STORAGE_USESSL=true >> /etc/default/tyk-gateway
+            echo TYK_GW_NODESECRET=${SharedSecret} >> /etc/default/tyk-gateway
+            echo TYK_GW_SECRET=${GWDashboardSecret}  >> /etc/default/tyk-gateway
+              
+            systemctl restart tyk-gateway
+
+          - {
+              RedisHost: !Ref ElasticCacheIp,
+              DashboardDomain: !Ref DashboardIp,
+              SharedSecret: !Ref SharedNodeSecret,
+              GWDashboardSecret: !Ref GWDashboardSecret,
+            }

@@ -1,0 +1,36 @@
+x-aws-vpc: ${AWS_VPC}
+x-aws-cluster: ${AWS_ECS_CLUSTER}
+# x-aws-loadbalancer: "LoadBalancerName"
+
+version: "3.9"
+services:
+  redis:
+    image: redis:6.0
+    networks:
+      - redis_private
+    ports:
+      - "6379:6379"
+
+  mongo:
+    image: mongo:4.2
+    networks:
+      - mongo_private
+    ports:
+      - "27017:27017"
+
+networks:
+  redis_private:
+    external: true
+    name: "sg-0b69c799431fe3c61"
+  mongo_private:
+    external: true
+    name: "sg-0c76f7ba8cb5478ee"
+  # prive_one:
+  #   external: true
+  #   name: "subnet-0a78f42f37548db08"
+  # prive_two:
+  #   external: true
+  #   name: "subnet-0eb0d36fbdfbff479"
+  # prive_three:
+  #   external: true
+  #   name: "subnet-07976f727474ca9e4"

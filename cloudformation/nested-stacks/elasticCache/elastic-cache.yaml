@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Elastic cluster Application Cloudformation Stack
+Parameters:
+  Project:
+    Description: Project name this cluster is has been created for
+    Type: String
+    Default: ""
+  Environment:
+    Description: Stack Environment
+    Type: String
+    Default: ""
+#Custom
+  ElastiCacheClusterCount:
+    Description: "Elasticache instance count "
+    Type: Number
+    Default: "2"
+  ElastiClusterInstanceType:
+    Description: How large of a box to run your cluster on
+    Type: String
+    Default: cache.t2.micro
+  ElastiCacheSubnets:
+    Description: Which subnets the EC2 instances should be deployed to.
+    Type: CommaDelimitedList
+  CachePort:
+    Description: The port number on which each of the cache nodes will accept connections.
+    Type: Number
+    Default: 6379
+  EnableTransitEncryption:
+    Description: Whether you should enable in transit encryption
+    Default: true
+    Type: String
+    AllowedValues:
+      - true
+      - false
+  EnableAtRestEncryptionEnabled:
+    Description: Whether you should enable at rest encryption
+    Default: true
+    Type: String
+    AllowedValues:
+      - true
+      - false
+#Dependencies
+  ElastiCacheSecurityGroup:
+    Description: Elastic Cache security group ID
+    Type: AWS::EC2::SecurityGroup::Id
+
+Resources:
+  ElastiCacheCluster:
+    Type: AWS::ElastiCache::ReplicationGroup
+    Properties:
+      AutomaticFailoverEnabled: true
+      AutoMinorVersionUpgrade: true
+      AtRestEncryptionEnabled: !Ref EnableAtRestEncryptionEnabled
+      TransitEncryptionEnabled: !Ref EnableTransitEncryption
+      CacheNodeType: !Ref ElastiClusterInstanceType
+      CacheSubnetGroupName:
+        Ref: SubnetGroup
+      Engine: redis
+      # EngineVersion: 6.0.5
+      NumCacheClusters: !Ref ElastiCacheClusterCount
+      Port: !Ref CachePort 
+      ReplicationGroupDescription: Redis cluster
+      SecurityGroupIds:
+        - !Ref ElastiCacheSecurityGroup
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Join: [":", [Cache, !Ref "AWS::StackName"]]
+        - Key: Project
+          Value: !Ref Project
+        - Key: Purpose
+          Value: Redis Cache
+        - Key: Environment
+          Value: !Ref Environment
+
+  SubnetGroup:
+    Type: AWS::ElastiCache::SubnetGroup
+    Properties:
+      Description: Cache Subnet Group
+      SubnetIds: !Ref ElastiCacheSubnets
+      
+
+Outputs:
+    PrimaryEndPointAddress:
+      Description: The DNS address of the primary read-write cache node.
+      Value: !GetAtt ElastiCacheCluster.PrimaryEndPoint.Address
+
+    PrimaryEndPointPort:
+      Description: The number of the port that the primary read-write cache engine is listening on.
+      Value: ElastiCacheCluster.PrimaryEndPoint.Port
+
+    ReaderEndPointAddress:
+      Description: The address of the reader endpoint.
+      Value: ElastiCacheCluster.ReaderEndPoint.Address
+
+    ReaderEndPointPort:
+      Description: The port used by the reader endpoint.
+      Value: ElastiCacheCluster.ReaderEndPoint.Port

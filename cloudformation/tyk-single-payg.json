@@ -1,0 +1,110 @@
+[
+  {
+    "ParameterKey": "VPC",
+    "ParameterValue": "vpc-0dc93da1d44cc0beb"
+  },
+  {
+    "ParameterKey": "Project",
+    "ParameterValue": "SingleGW"
+  },
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "demo"
+  },
+  {
+    "ParameterKey": "AMISelect",
+    "ParameterValue": "AWSLinux"
+  },
+  {
+    "ParameterKey": "GatewaySSHKey",
+    "ParameterValue": "esteban"
+  },
+  {
+    "ParameterKey": "GateWayInstanceType",
+    "ParameterValue": "t3.small"
+  },
+  {
+    "ParameterKey": "TYKGatewaySubDomain",
+    "ParameterValue": "tykgw"
+  },
+  {
+    "ParameterKey": "TYKPumpSubnet",
+    "ParameterValue": "subnet-0b123c662f9f85b00"
+  },
+  {
+    "ParameterKey": "TYKDashboardSubnet",
+    "ParameterValue": "subnet-0daa664ea8193062c"
+  },
+  {
+    "ParameterKey": "TYKGatewaySubnet",
+    "ParameterValue": "subnet-0daa664ea8193062c"
+  },
+  {
+    "ParameterKey": "ElastiCacheSubnets",
+    "ParameterValue": "subnet-0b123c662f9f85b00,subnet-0d7c807e8ad7d4664,subnet-0d3968d0de5787650"
+  },
+  {
+    "ParameterKey": "DocDBSubnets",
+    "ParameterValue": "subnet-0b123c662f9f85b00,subnet-0d7c807e8ad7d4664,subnet-0d3968d0de5787650"
+  },
+  {
+    "ParameterKey": "EnableAtRestEncryptionEnabled",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "LicenseKey",
+    "ParameterValue": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhbGxvd2VkX25vZGVzIjoiNGQ3ZDNmMjAtNjRmOS00NjYzLTUyYjItZTM4OTc2ZjkzMWFlLGQzOWNhOTJjLWY2YTAtNDkwYS03YjI3LTgxNmI3M2Q3ZWRlYSxiZGY5ZTVlOS1iYTFlLTQ2MTAtNDRmNy0wY2ZkMDlkMzE5NzUsYzdkNDk1NGEtZGNiMi00Y2E4LTdlMDMtNWJjMTgzNWMxYWVlLGQwNjE2OTQwLWIwODQtNGEwOS01MWUzLWMwNWIwZmE2MzY5MCxjYTVmMjYwZC1mZGIyLTQ3NzItN2M3MC0xZThlNGIxOGY4ZTMsNWExNWQxZGUtNWZkZC00NmEwLTQ0YTYtYWE0YzA1NzkzZDVlLDczMzA3MWQyLWM0MjEtNGZlZi00ZmM1LTJmZjJiMWUwYzNjOSwwYTE1YTJiNC0yMDhiLTQ5MmEtNGM3ZC0zOTU2YTMwNjg0NDQsYTUzZjljMWQtYmQ5NS00YWRmLTc1YTUtZGFlYzhlYmRlMDg1IiwiZXhwIjoxNjM2MDI1ODQ3LCJpYXQiOjE2MzM0MzM4NDcsIm93bmVyIjoiNTc3OTcxMTk0NWY5MmU2Njg5MDAwMTI3Iiwic2NvcGUiOiJtdWx0aV90ZWFtLHJiYWMsZ3JhcGgsZmVkZXJhdGlvbiIsInYiOiIyIn0.i0OKVQC-Qmi6gnsyYN3Yt01PwHSFwi4ZIHvak1hFOq369dg9MDQObGOjW24rcmHDUTbfdM3l3Viu2Ek3VLcr4MkpWFjdNss3okrNpuL44YCsFuLFXhHdtRzb7qVk4tdybKEShowGjjxk2eKXnNpjpoixAxs9OtbuQdK7IH7knSfgczNubnQtmuHlb705EYfAJ9eN4kbdoKflzmn5vrb29znQo8C2lcJIjO0whMzTTMe3e5_3AGBoM3qQ-rpWeOMIjTy-1cILON3LH8a7BjwO0WOuB8LYthtDtXKBbNtb0QtmM3AY514XxftRFbn9dbfajWyVKkcG3Kif7cgQptIQDQ"
+  },
+  {
+    "ParameterKey": "TYKDBAdminUserName",
+    "ParameterValue": "admin"
+  },
+  {
+    "ParameterKey": "TYKDBAdminUserName",
+    "ParameterValue": "admin"
+  },
+  {
+    "ParameterKey": "TYKDBAdminOrganization",
+    "ParameterValue": "infinity"
+  },
+  {
+    "ParameterKey": "DashboardInstanceType",
+    "ParameterValue": "t3.small"
+  },
+  {
+    "ParameterKey": "PumpInstanceType",
+    "ParameterValue": "t3.small"
+  },
+  {
+    "ParameterKey": "DashboardSSHKey",
+    "ParameterValue": "esteban"
+  },
+  {
+    "ParameterKey": "TYKMONGOSSHKey",
+    "ParameterValue": "esteban"
+  },
+  {
+    "ParameterKey": "PumpSSHKey",
+    "ParameterValue": "esteban"
+  },
+  {
+    "ParameterKey": "TYKHostedZone",
+    "ParameterValue": "alephnull.site"
+  },
+  {
+    "ParameterKey": "TYKDashBoardSubDomain",
+    "ParameterValue": "tykdb"
+  },
+  {
+    "ParameterKey": "MongoAdminUsername",
+    "ParameterValue": "clusteradmin"
+  },
+  {
+    "ParameterKey": "PumpDbAdminUser",
+    "ParameterValue": "admin"
+  },
+  {
+    "ParameterKey": "DBInstanceClass",
+    "ParameterValue": "db.t3.medium"
+  }
+]
