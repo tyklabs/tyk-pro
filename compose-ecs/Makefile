@@ -1,12 +1,3 @@
-# ENV ?= custom
-
-# env: preflight
-# 	docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env up -d
-
-# clean:
-# 	@echo "Tearing down docker compose.."
-# 	docker compose -f envs/$(ENV).yml --env-file envs/$(ENV).env down
-
 external:
 	docker compose -f external-components.yml -p external up -d
 
@@ -19,7 +10,14 @@ clean-external:
 clean-internal:
 	docker compose -f internal-components.yml -p internal down
 	
-init:
-	docker swarm init
+login:
+	aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
 
-.PHONY: env preflight clean
+init:
+	docker network create internal-components || true
+	docker network create external-components || true
+
+all: login init external internal 
+
+
+.PHONY: env preflight clean init login clean-internal clean-external internal external
