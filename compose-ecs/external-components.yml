@@ -10,8 +10,6 @@ services:
       retries: 10
       start_period: 2s
       timeout: 10s
-    networks:
-      - external-components
 
   mongo:
     image: ${MONGO_IMAGE}
@@ -23,8 +21,8 @@ services:
       timeout: 10s
       retries: 5
       start_period: 10s
-    networks:
-      - external-components
 
 networks:
-  external-components: {}
+  default:
+    name: tyk-network
+    external: true

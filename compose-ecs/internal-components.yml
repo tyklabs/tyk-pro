@@ -3,8 +3,6 @@ services:
   upstream:
     image: citizenstig/httpbin
     restart: always
-    networks:
-      - internal-components
 
   gateway:
     image: ${REGISTRY}/${GW_IMAGE}
@@ -22,8 +20,6 @@ services:
       retries: 10
       start_period: 4s
       timeout: 10s
-    networks:
-      - internal-components
 
   dashboard:
     image: ${REGISTRY}/${DB_IMAGE}
@@ -36,8 +32,6 @@ services:
     volumes:
       - ../confs/${CONFIG}:/conf
     entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
-    networks:
-      - internal-components
 
   pump:
     image: ${REGISTRY}/${PUMP_IMAGE}
@@ -46,9 +40,9 @@ services:
       - /tmp/pump-data:/pump-data
     depends_on:
       - gateway
-    entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
-    networks:
-      - internal-components
+    entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]  
 
 networks:
-  internal-components: {}
+  default:
+    name: tyk-network
+    external: true
