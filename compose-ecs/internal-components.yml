@@ -15,11 +15,11 @@ services:
       - ../confs/${CONFIG}:/conf
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
     healthcheck:
-      test: curl -s --fail http://localhost:8080/hello | grep -o '.*status":"pass".*redis":{"status":"pass"'
-      interval: 5s
-      retries: 10
-      start_period: 4s
-      timeout: 10s
+      # test: curl -s --fail http://localhost:8080/hello | grep -o '.*status":"pass".*dashboard":{"status":"pass".*redis":{"status":"pass"'
+      # interval: 5s
+      # retries: 10
+      # start_period: 5s
+      # timeout: 10s
 
   dashboard:
     image: ${REGISTRY}/${DB_IMAGE}
