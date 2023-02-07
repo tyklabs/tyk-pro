@@ -23,7 +23,6 @@ services:
       start_period: 4s
       timeout: 10s
     networks:
-      - external-components
       - internal-components
 
   dashboard:
@@ -38,7 +37,6 @@ services:
       - ../confs/${CONFIG}:/conf
     entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
     networks:
-      - external-components
       - internal-components
 
   pump:
@@ -50,11 +48,7 @@ services:
       - gateway
     entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
     networks:
-      - external-components
       - internal-components
 
 networks:
-  internal-components: 
-    external: true
-  external-components:
-    external: true
+  internal-components: {}

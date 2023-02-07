@@ -12,7 +12,6 @@ services:
       timeout: 10s
     networks:
       - external-components
-      - internal-components
 
   mongo:
     image: ${MONGO_IMAGE}
@@ -26,10 +25,6 @@ services:
       start_period: 10s
     networks:
       - external-components
-      - internal-components
 
 networks:
-  internal-components: 
-    external: true
-  external-components:
-    external: true
+  external-components: {}

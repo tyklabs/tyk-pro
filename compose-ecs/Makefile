@@ -13,9 +13,9 @@ clean-internal:
 login:
 	aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
 
-init:
-	docker network create internal-components || true
-	docker network create external-components || true
+# init:
+# 	docker network create internal-components || true
+# 	docker network create external-components || true
 
 all: login init external internal 
 clean-all: clean-internal clean-external
