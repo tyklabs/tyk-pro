@@ -18,6 +18,7 @@ init:
 	docker network create external-components || true
 
 all: login init external internal 
+clean-all: clean-internal clean-external
 
 
 .PHONY: env preflight clean init login clean-internal clean-external internal external
