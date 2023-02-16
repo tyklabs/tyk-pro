@@ -1,0 +1,64 @@
+version: '3'
+
+dotenv: ['.env']
+
+tasks:
+  login:
+    sumary: |
+      Logins into AWS ECR registry to allow pull required images from it
+    cmds:
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
+
+  local:
+    sumary: |
+      Deploys infrastructure locally using docker compose manifest
+    deps: [init]
+    cmds:
+      - echo "This is the ${COMPOSE_PROJECT_NAME} project "
+      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME}_local up -d
+      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME}_local up -d
+
+  clean-local:
+    sumary: |
+      Tears down all local infrastructure including networking
+    cmds:
+      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME}_local down
+      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME}_local down
+      - docker network rm tyk-network || true
+      - docker ps
+
+  login-remote:
+    sumary: |
+      All steps required to login into ECS.
+      It won't work from here, please run them directly into your
+    cmds:
+      - acp devacc
+      - docker context create ecs myecs
+      - docker context use myecs
+      - unset AWS_PROFILE
+      - export AWS_REGION=eu-central-1
+
+  remote:
+    sumary: |
+      Deploys infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-ecs.yml -p ${COMPOSE_PROJECT_NAME}_remote up -d
+
+  clean-remote:
+    sumary: |
+      Tears down all remote infrastructure
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-ecs.yml -p ${COMPOSE_PROJECT_NAME}_remote down
+
+  init:
+    sumary: |
+      Creates networking infra for local deployment
+    cmds:
+      - docker network create tyk-network || true
+
+  convert:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    cmds:
+      - docker compose -f docker-compose.yml -f docker-compose-ecs.yml convert > docker-ecs-cft.yml
