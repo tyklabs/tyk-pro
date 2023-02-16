@@ -1,0 +1,28 @@
+version: "3.9"
+services:
+  redis:
+    image: ${REDIS_IMAGE}
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      retries: 10
+      start_period: 2s
+      timeout: 10s
+
+  mongo:
+    image: ${MONGO_IMAGE}
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+networks:
+  default:
+    name: tyk-network
+    external: true
