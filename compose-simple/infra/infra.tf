@@ -22,8 +22,8 @@ module "public_subnets" {
 
   base_cidr_block = cidrsubnet(var.cidr, 4, 15)
   networks = [
-    { name = "pubaz1", new_bits = 4 }
-    # { name = "pubaz2", new_bits = 4 },
+    { name = "pubaz1", new_bits = 4 },
+    { name = "pubaz2", new_bits = 4 }
     # { name = "pubaz3", new_bits = 4 },
   ]
 }
