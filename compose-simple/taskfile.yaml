@@ -41,14 +41,44 @@ tasks:
   remote:
     sumary: |
       Deploys infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    deps: [remote-e,remote-i]
+
+  remote-e:
+    sumary: |
+      Deploys external components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    vars:
+      COMPONENT: external
     cmds:
-      - docker compose -f docker-compose-external.yml -f docker-compose-internal.yml -f docker-compose-ecs.yml -p ${COMPOSE_PROJECT_NAME}-remote up -d
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" up -d
+
+  remote-i:
+    sumary: |
+      Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    cmds:
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" up -d
+    vars:
+      COMPONENT: internal
 
   clean-remote:
     sumary: |
       Tears down all remote infrastructure
+    deps: [clean-remote-e,clean-remote-i]
+
+  clean-remote-i:
+    sumary: |
+      Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
     cmds:
-      - docker compose -f docker-compose-external.yml -f docker-compose-internal.yml -f docker-compose-ecs.yml -p ${COMPOSE_PROJECT_NAME}-remote down
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" down
+    vars:
+      COMPONENT: internal
+
+  clean-remote-e:
+    sumary: |
+      Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    cmds:
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" down
+    vars:
+      COMPONENT: external
 
   init:
     sumary: |
