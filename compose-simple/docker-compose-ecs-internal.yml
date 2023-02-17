@@ -1,0 +1,10 @@
+x-aws-vpc: ${AWS_VPC}
+
+services:
+  gateway:
+    entrypoint: []
+
+networks:
+  default:
+    name: tyk-network
+    external: false

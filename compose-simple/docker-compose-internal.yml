@@ -9,11 +9,9 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - TYK_GW_STORAGE_HOST=redis
+      - TYK_GW_STORAGE_HOST=oss-e-LoadB-16DKFSNAJ1IT6-28bbfd9c6f0f858d.elb.eu-central-1.amazonaws.com
     # volumes:
     #   - ../confs/${CONFIG}:/conf
-    depends_on:
-      - redis
     # entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
 networks:
