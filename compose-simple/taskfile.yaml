@@ -86,9 +86,26 @@ tasks:
     cmds:
       - docker network create tyk-network || true
 
-  convert:
+  convert-remote:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    deps: [convert-remote-e,convert-remote-i]
+
+  convert-remote-i:
     sumary: |
       Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
       For more info read: https://docs.docker.com/cloud/ecs-integration/
     cmds:
-      - docker compose -f docker-compose.yml -f docker-compose-ecs.yml convert > docker-ecs-cft.yml
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+    vars:
+      COMPONENT: internal
+
+  convert-remote-e:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    cmds:
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+    vars:
+      COMPONENT: external

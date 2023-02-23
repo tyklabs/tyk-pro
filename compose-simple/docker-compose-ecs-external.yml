@@ -1,5 +1,20 @@
 x-aws-vpc: ${AWS_VPC}
 
+x-aws-cloudformation:
+  Resources:
+    LoadBalancer:
+    MongoTCP27017Listener:
+    MongoTCP27017TargetGroup:
+    MongoService:
+      DependsOn:
+      Properties:
+        LoadBalancers:
+    RedisTCP6379Listener:
+    RedisTCP6379TargetGroup:
+    RedisService:
+      DependsOn:
+      Properties:
+        LoadBalancers:
 networks:
   default:
     name: tyk-network
