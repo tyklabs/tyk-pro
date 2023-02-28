@@ -3,6 +3,9 @@ x-aws-vpc: ${AWS_VPC}
 services:
   gateway:
     entrypoint: []
+    environment:
+      - TYK_GW_STORAGE_HOST=redis.${COMPOSE_PROJECT_NAME}-external.local
+    volumes: []
 
 networks:
   default:

@@ -15,15 +15,15 @@ tasks:
     deps: [init]
     cmds:
       - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME}-local up -d
-      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME}-local up -d
+      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME} up -d
 
   clean-local:
     sumary: |
       Tears down all local infrastructure including networking
     cmds:
-      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME}-local down
-      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME}-local down
+      - docker compose -f docker-compose-external.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker compose -f docker-compose-internal.yml -p ${COMPOSE_PROJECT_NAME} down
       - docker network rm tyk-network || true
       - docker ps
 
@@ -49,13 +49,13 @@ tasks:
     vars:
       COMPONENT: external
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" up -d
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" up -d
 
   remote-i:
     sumary: |
       Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" up -d
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" up -d
     vars:
       COMPONENT: internal
 
@@ -68,7 +68,7 @@ tasks:
     sumary: |
       Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" down
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" down
     vars:
       COMPONENT: internal
 
@@ -76,7 +76,7 @@ tasks:
     sumary: |
       Deploys internal components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" down
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" down
     vars:
       COMPONENT: external
 
@@ -97,7 +97,7 @@ tasks:
       Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
       For more info read: https://docs.docker.com/cloud/ecs-integration/
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
     vars:
       COMPONENT: internal
 
@@ -106,6 +106,6 @@ tasks:
       Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
       For more info read: https://docs.docker.com/cloud/ecs-integration/
     cmds:
-      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-remote-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+      - docker compose -f docker-compose-"{{.COMPONENT}}".yml -f docker-compose-ecs-"{{.COMPONENT}}".yml -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
     vars:
       COMPONENT: external
