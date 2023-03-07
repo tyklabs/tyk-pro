@@ -1,0 +1,5 @@
+version: "3.9"
+services:
+  redis:
+    volumes:
+      - ${CONFIG_FOLDER}/${CONFIG}:/usr/local/etc/redis

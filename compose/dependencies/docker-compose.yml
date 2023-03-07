@@ -2,8 +2,12 @@ version: "3.9"
 services:
   redis:
     image: ${REDIS_IMAGE}
+    # extends: 
+    #   file: docker-compose.volumes.yml
+    #   service: redis
     ports:
       - "6379:6379"
+    # command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 5s
@@ -13,6 +17,9 @@ services:
 
   mongo:
     image: ${MONGO_IMAGE}
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=123456789
     ports:
       - "27017:27017"
     healthcheck:
