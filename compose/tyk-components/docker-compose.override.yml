@@ -1,5 +1,13 @@
 x-aws-vpc: ${AWS_VPC}
 
+x-aws-cloudformation:
+  Resources:
+    LoadBalancer:
+      Properties:
+        Subnets:
+        - subnet-06ab6f58bb6d23123   #Public-1a
+        - subnet-0bbe276402b376013   #Public-1b
+        # - subnet-04d34f3e5863af20a #Private-1a
 services:
   gateway:
     environment:
