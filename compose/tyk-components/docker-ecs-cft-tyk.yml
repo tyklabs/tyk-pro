@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: 2010-09-09
+Resources:
+  CloudMap:
+    Properties:
+      Description: Service Map for Docker Compose project oss-ecs-tyk
+      Name: oss-ecs-tyk.local
+      Vpc: vpc-040a609d325d230d7
+    Type: AWS::ServiceDiscovery::PrivateDnsNamespace
+  Cluster:
+    Properties:
+      ClusterName: oss-ecs-tyk
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+    Type: AWS::ECS::Cluster
+  Default8080Ingress:
+    Properties:
+      CidrIp: 0.0.0.0/0
+      Description: gateway:8080/tcp on default network
+      FromPort: 8080
+      GroupId:
+        Ref: DefaultNetwork
+      IpProtocol: TCP
+      ToPort: 8080
+    Type: AWS::EC2::SecurityGroupIngress
+  DefaultNetwork:
+    Properties:
+      GroupDescription: oss-ecs-tyk Security Group for default network
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+        - Key: com.docker.compose.network
+          Value: tyk-network
+      VpcId: vpc-040a609d325d230d7
+    Type: AWS::EC2::SecurityGroup
+  DefaultNetworkIngress:
+    Properties:
+      Description: Allow communication within network default
+      GroupId:
+        Ref: DefaultNetwork
+      IpProtocol: "-1"
+      SourceSecurityGroupId:
+        Ref: DefaultNetwork
+    Type: AWS::EC2::SecurityGroupIngress
+  GatewayService:
+    DependsOn:
+      - GatewayTCP8080Listener
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+          - Cluster
+          - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      LoadBalancers:
+        - ContainerName: gateway
+          ContainerPort: 8080
+          TargetGroupArn:
+            Ref: GatewayTCP8080TargetGroup
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Ref: DefaultNetwork
+          Subnets:
+            - subnet-04d34f3e5863af20a
+            - subnet-06ab6f58bb6d23123
+            - subnet-0bbe276402b376013
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+        - RegistryArn:
+            Fn::GetAtt:
+              - GatewayServiceDiscoveryEntry
+              - Arn
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+        - Key: com.docker.compose.service
+          Value: gateway
+      TaskDefinition:
+        Ref: GatewayTaskDefinition
+    Type: AWS::ECS::Service
+  GatewayServiceDiscoveryEntry:
+    Properties:
+      Description: '"gateway" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+          - TTL: 60
+            Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: gateway
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  GatewayTCP8080Listener:
+    Properties:
+      DefaultActions:
+        - ForwardConfig:
+            TargetGroups:
+              - TargetGroupArn:
+                  Ref: GatewayTCP8080TargetGroup
+          Type: forward
+      LoadBalancerArn:
+        Ref: LoadBalancer
+      Port: 8080
+      Protocol: TCP
+    Type: AWS::ElasticLoadBalancingV2::Listener
+  GatewayTCP8080TargetGroup:
+    Properties:
+      Port: 8080
+      Protocol: TCP
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+      TargetType: ip
+      VpcId: vpc-040a609d325d230d7
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+  GatewayTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+        - Command:
+            - eu-central-1.compute.internal
+            - oss-ecs-tyk.local
+          Essential: false
+          Image: docker/ecs-searchdomain-sidecar:1.0
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Ref: LogGroup
+              awslogs-region:
+                Ref: AWS::Region
+              awslogs-stream-prefix: oss-ecs-tyk
+          Name: Gateway_ResolvConf_InitContainer
+        - DependsOn:
+            - Condition: SUCCESS
+              ContainerName: Gateway_ResolvConf_InitContainer
+          Environment:
+            - Name: TYK_GW_STORAGE_HOST
+              Value: redis.oss-ecs-dependencies.local
+          Essential: true
+          Image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:master@sha256:15641b340aa1326661fb47e79683df762e21a82e170b96e23f66e9837d06629a
+          LinuxParameters: {}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Ref: LogGroup
+              awslogs-region:
+                Ref: AWS::Region
+              awslogs-stream-prefix: oss-ecs-tyk
+          Name: gateway
+          PortMappings:
+            - ContainerPort: 8080
+              HostPort: 8080
+              Protocol: tcp
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: GatewayTaskExecutionRole
+      Family: oss-ecs-tyk-gateway
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  GatewayTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Condition: {}
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+        - Key: com.docker.compose.service
+          Value: gateway
+    Type: AWS::IAM::Role
+  LoadBalancer:
+    Properties:
+      LoadBalancerAttributes:
+        - Key: load_balancing.cross_zone.enabled
+          Value: "true"
+      Scheme: internet-facing
+      Subnets:
+        - subnet-06ab6f58bb6d23123
+        - subnet-0bbe276402b376013
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+      Type: network
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+  LogGroup:
+    Properties:
+      LogGroupName: /docker-compose/oss-ecs-tyk
+    Type: AWS::Logs::LogGroup
+  UpstreamService:
+    Properties:
+      Cluster:
+        Fn::GetAtt:
+          - Cluster
+          - Arn
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 100
+      DeploymentController:
+        Type: ECS
+      DesiredCount: 1
+      LaunchType: FARGATE
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          AssignPublicIp: ENABLED
+          SecurityGroups:
+            - Ref: DefaultNetwork
+          Subnets:
+            - subnet-04d34f3e5863af20a
+            - subnet-06ab6f58bb6d23123
+            - subnet-0bbe276402b376013
+      PlatformVersion: 1.4.0
+      PropagateTags: SERVICE
+      SchedulingStrategy: REPLICA
+      ServiceRegistries:
+        - RegistryArn:
+            Fn::GetAtt:
+              - UpstreamServiceDiscoveryEntry
+              - Arn
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+        - Key: com.docker.compose.service
+          Value: upstream
+      TaskDefinition:
+        Ref: UpstreamTaskDefinition
+    Type: AWS::ECS::Service
+  UpstreamServiceDiscoveryEntry:
+    Properties:
+      Description: '"upstream" service discovery entry in Cloud Map'
+      DnsConfig:
+        DnsRecords:
+          - TTL: 60
+            Type: A
+        RoutingPolicy: MULTIVALUE
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      Name: upstream
+      NamespaceId:
+        Ref: CloudMap
+    Type: AWS::ServiceDiscovery::Service
+  UpstreamTaskDefinition:
+    Properties:
+      ContainerDefinitions:
+        - Command:
+            - eu-central-1.compute.internal
+            - oss-ecs-tyk.local
+          Essential: false
+          Image: docker/ecs-searchdomain-sidecar:1.0
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Ref: LogGroup
+              awslogs-region:
+                Ref: AWS::Region
+              awslogs-stream-prefix: oss-ecs-tyk
+          Name: Upstream_ResolvConf_InitContainer
+        - DependsOn:
+            - Condition: SUCCESS
+              ContainerName: Upstream_ResolvConf_InitContainer
+          Essential: true
+          Image: docker.io/citizenstig/httpbin:latest@sha256:b81c818ccb8668575eb3771de2f72f8a5530b515365842ad374db76ad8bcf875
+          LinuxParameters: {}
+          LogConfiguration:
+            LogDriver: awslogs
+            Options:
+              awslogs-group:
+                Ref: LogGroup
+              awslogs-region:
+                Ref: AWS::Region
+              awslogs-stream-prefix: oss-ecs-tyk
+          Name: upstream
+      Cpu: "256"
+      ExecutionRoleArn:
+        Ref: UpstreamTaskExecutionRole
+      Family: oss-ecs-tyk-upstream
+      Memory: "512"
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+    Type: AWS::ECS::TaskDefinition
+  UpstreamTaskExecutionRole:
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+              - sts:AssumeRole
+            Condition: {}
+            Effect: Allow
+            Principal:
+              Service: ecs-tasks.amazonaws.com
+        Version: 2012-10-17
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+        - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
+      Tags:
+        - Key: com.docker.compose.project
+          Value: oss-ecs-tyk
+        - Key: com.docker.compose.service
+          Value: upstream
+    Type: AWS::IAM::Role

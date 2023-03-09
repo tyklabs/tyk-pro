@@ -1,0 +1,156 @@
+version: '3'
+
+dotenv: ['.env']
+
+vars:
+  dep_folder: dependencies
+  comp_folder: tyk-components
+
+tasks:
+  login:
+    sumary: |
+      Logins into AWS ECR registry to allow pull required images from it
+    cmds:
+      - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
+
+  local:
+    sumary: |
+      Deploys infrastructure locally using docker compose manifest
+    deps: [init]
+    cmds:
+      - echo "This is the ${COMPOSE_PROJECT_NAME} project "
+      - docker compose  -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker ps
+
+  clean-local:
+    sumary: |
+      Tears down all local infrastructure including networking
+    cmds:
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker network rm tyk-network || true
+      - docker ps
+
+  login-remote:
+    sumary: |
+      All steps required to login into ECS.
+      It won't work from here, please run them directly into your
+    cmds:
+      - acp devacc
+      - docker context create ecs myecs
+      - docker context use myecs
+      - unset AWS_PROFILE
+      - export AWS_REGION=eu-central-1
+
+  remote:
+    env:
+      DOCKER_CONTEXT: myecs
+    sumary: |
+      Deploys infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    deps: [remote-dep,remote-comp]
+
+  remote-dep:
+    sumary: |
+      Deploys dependencies components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    dir: '{{.dep_folder}}'
+    vars:
+      COMPONENT: dependencies
+    env:
+      DOCKER_CONTEXT: myecs
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" up -d
+
+  remote-comp:
+    sumary: |
+      Deploys tyk components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    dir: '{{.comp_folder}}'
+    vars:
+      COMPONENT: tyk
+    env:
+      DOCKER_CONTEXT: myecs
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" up -d
+    
+
+  clean-remote:
+    sumary: |
+      Tears down all remote infrastructure
+    env:
+      DOCKER_CONTEXT: myecs
+    deps: [clean-remote-dep,clean-remote-comp]
+
+  clean-remote-dep:
+    sumary: |
+      Deploys tyk components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    dir: '{{.dep_folder}}'
+    env:
+      DOCKER_CONTEXT: myecs
+    vars:
+      COMPONENT: dependencies
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" down
+
+  clean-remote-comp:
+    sumary: |
+      Deploys external components infrastructure remotelly on a dedicated ecs cluster using docker compose manifests
+    dir: '{{.comp_folder}}'
+    env:
+      DOCKER_CONTEXT: myecs
+    vars:
+      COMPONENT: tyk
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" down
+
+  init:
+    sumary: |
+      Creates networking infra for local deployment
+    cmds:
+      - docker network create tyk-network || true
+
+  convert-remote:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    env:
+      DOCKER_CONTEXT: myecs
+    deps: [convert-remote-dep,convert-remote-comp]
+
+  convert-remote-comp:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    dir: '{{.comp_folder}}'
+    env:
+      DOCKER_CONTEXT: myecs
+    vars:
+      COMPONENT: tyk
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+
+  convert-remote-dep:
+    sumary: |
+      Outputs the cloudformation template that will be use to deploy docker compose manifest remotelly on the ecs cluster.
+      For more info read: https://docs.docker.com/cloud/ecs-integration/
+    dir: '{{.dep_folder}}'
+    env:
+      DOCKER_CONTEXT: myecs
+    vars:
+      COMPONENT: dependencies
+    cmds:
+      - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" convert > docker-ecs-cft-"{{.COMPONENT}}".yml
+
+  test:
+    cmds:
+      - echo "---Gateway Status---"
+      - curl -s --fail http://"{{.HOST}}":8080/hello
+    vars:
+      HOST: localhost
+
+  test-remote:
+    cmds:
+      - echo "---Gateway Status---"
+      - curl -s --fail http://"{{.HOST}}":8080/hello
+    vars:
+      HOST: oss-tyk{project}.elb.eu-central-1.amazonaws.com
+    
