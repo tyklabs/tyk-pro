@@ -2,4 +2,5 @@ version: "3.9"
 services:
   redis:
     volumes:
-      - ${CONFIG_FOLDER}/${CONFIG}:/usr/local/etc/redis
+      - ${VOLUME_FOLDER}/redis/certs:/opt/bitnami/redis/certs
+      # - ${VOLUME_FOLDER}/redis:/usr/local/etc/redis

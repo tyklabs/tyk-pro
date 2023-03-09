@@ -7,8 +7,6 @@ services:
     ports:
       - "6379:6379"
     # command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
-    # environment:
-    #   - ALLOW_EMPTY_PASSWORD=yes
 
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]

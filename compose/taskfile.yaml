@@ -19,7 +19,7 @@ tasks:
     deps: [init]
     cmds:
       - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose  -f {{ .dep_folder }}/docker-compose.yml  -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose  -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
       - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
       - docker ps
 
@@ -27,7 +27,7 @@ tasks:
     sumary: |
       Tears down all local infrastructure including networking
     cmds:
-      - docker compose -f {{ .dep_folder }}/docker-compose.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
       - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
       - docker network rm tyk-network || true
       - docker ps
@@ -152,5 +152,5 @@ tasks:
       - echo "---Gateway Status---"
       - curl -s --fail http://"{{.HOST}}":8080/hello
     vars:
-      HOST: oss-e-LoadB-1BN71N6NA6HEF-907c065be9f67a72.elb.eu-central-1.amazonaws.com
+      HOST: oss-tyk{project}.elb.eu-central-1.amazonaws.com
     
