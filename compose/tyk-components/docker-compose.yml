@@ -6,15 +6,11 @@ services:
 
   gateway:
     image: ${REGISTRY}/${GW_IMAGE}
+    env_file:
+      - ../configsets/${CONFIGSET}/gw.env
     ports:
       - "8080:8080"
-    environment:
-      - TYK_GW_STORAGE_HOST=redis
-    # volumes:
-    #   - ../confs/${CONFIG}:/conf
-    depends_on:
-      - redis
-    # entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
 networks:
   default:

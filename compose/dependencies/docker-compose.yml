@@ -2,8 +2,12 @@ version: "3.9"
 services:
   redis:
     image: ${REDIS_IMAGE}
+    env_file:
+      - ../configsets/${CONFIGSET}/redis.env
     ports:
       - "6379:6379"
+    # command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
     healthcheck:
       test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
       interval: 5s
@@ -13,6 +17,11 @@ services:
 
   mongo:
     image: ${MONGO_IMAGE}
+    env_file:
+      - ../configsets/${CONFIGSET}/mongo.env
+    # environment:
+    #   - MONGO_INITDB_ROOT_USERNAME=root
+    #   - MONGO_INITDB_ROOT_PASSWORD=123456789
     ports:
       - "27017:27017"
     healthcheck:

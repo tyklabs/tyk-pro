@@ -28,6 +28,17 @@ module "public_subnets" {
   ]
 }
 
+module "private_subnets" {
+  source = "hashicorp/subnets/cidr"
+
+  base_cidr_block = cidrsubnet(var.cidr, 4, 1)
+  networks = [
+    { name = "privaz1", new_bits = 4 }
+    # { name = "privaz2", new_bits = 4 }
+    # { name = "privaz3", new_bits = 4 },
+  ]
+}
+
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -35,13 +46,13 @@ module "vpc" {
   cidr = var.cidr
 
   azs                 = data.aws_availability_zones.available.names
-  # private_subnets     = module.private_subnets.networks[*].cidr_block
-  # private_subnet_tags = { Type = "private" }
+  private_subnets     = module.private_subnets.networks[*].cidr_block
+  private_subnet_tags = { Type = "private" }
   public_subnets      = module.public_subnets.networks[*].cidr_block
   public_subnet_tags  = { Type = "public" }
 
-  enable_nat_gateway = false
-  single_nat_gateway = false
+  enable_nat_gateway = true
+  single_nat_gateway = true
   # Need DNS to address EFS by name
   enable_dns_support   = true
   enable_dns_hostnames = true
