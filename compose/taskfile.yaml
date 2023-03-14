@@ -71,7 +71,19 @@ tasks:
       DOCKER_CONTEXT: myecs
     cmds:
       - docker compose -p ${COMPOSE_PROJECT_NAME}-"{{.COMPONENT}}" up -d
-    
+
+  remote-status:
+    sumary: |
+      Describes remote deployment status
+    cmds:
+      - aws cloudformation describe-stacks --stack-name ${COMPOSE_PROJECT_NAME}-dependencies | jq .Stacks[].StackStatus
+      - aws cloudformation describe-stacks --stack-name ${COMPOSE_PROJECT_NAME}-tyk | jq .Stacks[].StackStatus
+      # - |
+      # while [ "${A}" != "CREATE_COMPLETE" -o "${B}" != "CREATE_COMPLETE" ]
+      # do
+      #   A=$(aws cloudformation describe-stacks --stack-name ${COMPOSE_PROJECT_NAME}-dependencies | jq .Stacks[].StackStatus)
+      #   B=$(aws cloudformation describe-stacks --stack-name ${COMPOSE_PROJECT_NAME}-tyk | jq .Stacks[].StackStatus)
+      # done
 
   clean-remote:
     sumary: |
@@ -152,5 +164,5 @@ tasks:
       - echo "---Gateway Status---"
       - curl -s --fail http://"{{.HOST}}":8080/hello
     vars:
-      HOST: oss-tyk{project}.elb.eu-central-1.amazonaws.com
+      HOST: "${COMPOSE_PROJECT_NAME}.${TYK_DEV_DOMAIN}"
     

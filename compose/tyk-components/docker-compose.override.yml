@@ -2,6 +2,15 @@ x-aws-vpc: ${AWS_VPC}
 
 x-aws-cloudformation:
   Resources:
+    myDNSLBRecord:
+      Type: AWS::Route53::RecordSet
+      Properties:
+        HostedZoneName: "${TYK_DEV_DOMAIN}."
+        Comment: DNS name for my lb.
+        Name: "${COMPOSE_PROJECT_NAME}.${TYK_DEV_DOMAIN}."
+        Type: CNAME
+        TTL: 900
+        ResourceRecords: [{ "Fn::GetAtt" : ["LoadBalancer", "DNSName"] }]
     LoadBalancer:
       Properties:
         Subnets:
