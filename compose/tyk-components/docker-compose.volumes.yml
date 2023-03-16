@@ -3,3 +3,6 @@ services:
   gateway:
     volumes:
       - ${CONFIG_FOLDER}/${CONFIG}:/conf
+  dashboard:
+    volumes:
+      - ${CONFIG_FOLDER}/${CONFIG}:/conf

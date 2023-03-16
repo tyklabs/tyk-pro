@@ -12,6 +12,20 @@ services:
       - "8080:8080"
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
+  dashboard:
+    image: ${REGISTRY}/${DB_IMAGE}
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+    env_file:
+      - ../configsets/${CONFIGSET}/dash.env
+    entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
+
+  test:
+    image: myp
+    env_file:
+      - ../configsets/${CONFIGSET}/test.env
+
 networks:
   default:
     name: tyk-network
