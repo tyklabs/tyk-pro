@@ -1,0 +1,11 @@
+{
+  "file_list": [
+    "test.py"
+  ],
+  "custom_middleware": {
+    "driver": "python",
+    "auth_check": {
+      "name": "MyAuthMiddleware"
+    }
+  }
+}

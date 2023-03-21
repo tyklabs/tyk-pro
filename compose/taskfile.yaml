@@ -155,7 +155,7 @@ tasks:
   test:
     cmds:
       - echo "---Gateway Status---"
-      - curl -s --fail http://"{{.HOST}}":8080/hello
+      - curl -s --fail -k https://"{{.HOST}}":8080/hello
     vars:
       HOST: localhost
 
