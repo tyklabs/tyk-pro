@@ -5,11 +5,11 @@ services:
       # - ./conf/tyk_pro.conf:/opt/tyk-gateway/tyk.conf
       - ${CONFIG_FOLDER}/${CONFIG}:/conf
       # - ./conf/tyk_pro.conf:/develop/confs/tyk.conf
-      - ${CONFIG_FOLDER}/${CONFIG}:/develop/confs
+      # - ${CONFIG_FOLDER}/${CONFIG}:/develop/confs
       - ${VOLUME_FOLDER}/gw/certs:/etc/ssl/certs
-      - ${VOLUME_FOLDER}/gw/tyk-gateway/middleware:/opt/tyk-gateway/middleware
-      - ${VOLUME_FOLDER}/gw/tyk-gateway/apps:/opt/tyk-gateway/apps
-      - ${VOLUME_FOLDER}/gw/tyk-gateway/templates:/opt/tyk-gateway/templates
+      # - ${VOLUME_FOLDER}/gw/tyk-gateway/middleware:/opt/tyk-gateway/middleware
+      # - ${VOLUME_FOLDER}/gw/tyk-gateway/apps:/opt/tyk-gateway/apps
+      # - ${VOLUME_FOLDER}/gw/tyk-gateway/templates:/opt/tyk-gateway/templates
       # - ${GOPATH}:/develop/go
       # - ./apps:/opt/tyk-gateway/apps
   dashboard:
