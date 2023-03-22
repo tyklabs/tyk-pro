@@ -29,7 +29,7 @@ services:
 
   tyk-pump:
       container_name: tyk-pump
-      image: tykio/tyk-pump-docker-pub:latest
+      image: ${REGISTRY}/${PUMP_IMAGE}
       env_file:
         - ../configsets/${CONFIGSET}/pump.env
       ports:    
@@ -40,9 +40,6 @@ services:
         context: ./bundle_server
       ports:
           - "8000:8000"
-      depends_on:
-          - tyk-redis
-          - tyk-gateway
   federation-server:
       container_name: federation
       image: agatawitkowska/federation-example
@@ -67,10 +64,9 @@ services:
       command: "faker-schema.graphql"
       ports:
           - "9002:9002"
-
   test:
     container_name: test
-    image: myp
+    image: ${REGISTRY}/${TEST_IMAGE}
     env_file:
       - ../configsets/${CONFIGSET}/test.env
 
