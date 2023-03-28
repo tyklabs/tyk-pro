@@ -14,7 +14,7 @@ services:
       - "6000:6000"
       - "8003:8003"
       - "8080:8080" 
-    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    # entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
   dashboard:
     container_name: dashboard
@@ -25,7 +25,7 @@ services:
       - "1026:1025"
     env_file:
       - ../configsets/${CONFIGSET}/dash.env
-    entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
+    # entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
 
   tyk-pump:
       container_name: tyk-pump
