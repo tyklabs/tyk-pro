@@ -5,35 +5,36 @@ services:
     image: kennethreitz/httpbin
     restart: always
 
-  gateway:
-    container_name: gateway
+  tyk-gateway:
+    container_name: tyk-gateway
     image: ${REGISTRY}/${GW_IMAGE}
     env_file:
-      - ../configsets/${CONFIGSET}/gw.env
+      - ../configsets/${CONFIGSET}/tyk-gateway.env
     ports:
       - "6000:6000"
       - "8003:8003"
       - "8080:8080" 
-    # entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
-  dashboard:
-    container_name: dashboard
+  tyk-dashboard:
+    container_name: tyk-dashboard
     image: ${REGISTRY}/${DB_IMAGE}
     ports:
       - "3000:3000"
       - "5000:5000"
       - "1026:1025"
     env_file:
-      - ../configsets/${CONFIGSET}/dash.env
-    # entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
+      - ../configsets/${CONFIGSET}/tyk-analytics.env
+    entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
 
   tyk-pump:
       container_name: tyk-pump
       image: ${REGISTRY}/${PUMP_IMAGE}
-      env_file:
-        - ../configsets/${CONFIGSET}/pump.env
       ports:    
           - "8061:8061"
+      env_file:
+        - ../configsets/${CONFIGSET}/tyk-pump.env
+      entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
   bundle-server:
       container_name: bundle-server
       build:
@@ -69,6 +70,7 @@ services:
     image: ${REGISTRY}/${TEST_IMAGE}
     env_file:
       - ../configsets/${CONFIGSET}/test.env
+    command: ${TESTSUITE}
 
 networks:
   default:
