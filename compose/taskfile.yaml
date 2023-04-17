@@ -23,6 +23,17 @@ tasks:
       - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
       - docker ps
 
+  local-ha-1:
+    sumary: |
+      Deploys ha infrastructure locally using docker compose manifest
+    deps: [init]
+    cmds:
+      - echo "This is the ${COMPOSE_PROJECT_NAME} project "
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker ps
+
+
   local-ha:
     sumary: |
       Deploys ha infrastructure locally using docker compose manifest
