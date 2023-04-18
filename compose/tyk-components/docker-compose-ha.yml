@@ -13,7 +13,7 @@ services:
     image: ${REGISTRY}/${GW_ALFA_IMAGE}
     container_name: tyk-gateway-datacenter-1-alfa
     ports:
-      - "8181:8082"
+      - "8181:8181"
     env_file:
       - ../configsets/${CONFIGSET}/tyk-gateway-datacenter-1-alfa.env
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-1.conf"]
@@ -22,7 +22,7 @@ services:
     image: ${REGISTRY}/${GW_BETA_IMAGE}
     container_name: tyk-gateway-datacenter-1-beta
     ports:
-      - "8182:8082"
+      - "8182:8182"
     env_file:
       - ../configsets/${CONFIGSET}/tyk-gateway-datacenter-1-beta.env
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-1.conf"]
@@ -31,7 +31,7 @@ services:
     image: ${REGISTRY}/${GW_ALFA_IMAGE}
     container_name: tyk-gateway-datacenter-2-alfa
     ports:
-      - "8281:8082"
+      - "8281:8281"
     env_file:
       - ../configsets/${CONFIGSET}/tyk-gateway-datacenter-2-alfa.env
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-2.conf"]
@@ -40,7 +40,7 @@ services:
     image: ${REGISTRY}/${GW_BETA_IMAGE}
     container_name: tyk-gateway-datacenter-2-beta
     ports:
-      - "8282:8082"
+      - "8282:8282"
     env_file:
       - ../configsets/${CONFIGSET}/tyk-gateway-datacenter-2-beta.env
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-2.conf"]

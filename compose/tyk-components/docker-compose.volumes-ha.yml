@@ -3,7 +3,6 @@ services:
   tyk-mdcb:
     volumes:
       - ${CONFIG_FOLDER}/${CONFIG}:/conf
-      # - ${VOLUME_FOLDER}/gw/certs:/etc/ssl/certs
   tyk-gateway-datacenter-1-alfa:
     volumes:
       - ${CONFIG_FOLDER}/${CONFIG}:/conf
