@@ -1,15 +1,7 @@
 version: "3.9"
 services:
-  tyk-mdcb: 
-    image: tykio/${MDCB_IMAGE}
-    container_name: tyk-mdcb
-    ports:
-    - "9090:9090"
-    env_file:
-      - ../configsets/${CONFIGSET}/tyk-mdcb.env
-    entrypoint: ["/opt/tyk-sink/tyk-sink", "--conf", "/conf/tyk-sink.conf"]
-
   tyk-gateway-datacenter-1-alfa:
+    profiles: ["all", "slave-datacenter"]
     image: ${REGISTRY}/${GW_ALFA_IMAGE}
     container_name: tyk-gateway-datacenter-1-alfa
     ports:
@@ -19,6 +11,7 @@ services:
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-1.conf"]
 
   tyk-gateway-datacenter-1-beta:
+    profiles: ["all", "slave-datacenter"]
     image: ${REGISTRY}/${GW_BETA_IMAGE}
     container_name: tyk-gateway-datacenter-1-beta
     ports:
@@ -28,6 +21,7 @@ services:
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-1.conf"]
 
   tyk-gateway-datacenter-2-alfa:
+    profiles: ["all", "slave-datacenter"]
     image: ${REGISTRY}/${GW_ALFA_IMAGE}
     container_name: tyk-gateway-datacenter-2-alfa
     ports:
@@ -37,6 +31,7 @@ services:
     entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk-datacenter-2.conf"]
 
   tyk-gateway-datacenter-2-beta:
+    profiles: ["all", "slave-datacenter"]
     image: ${REGISTRY}/${GW_BETA_IMAGE}
     container_name: tyk-gateway-datacenter-2-beta
     ports:

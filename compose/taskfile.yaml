@@ -5,6 +5,7 @@ dotenv: ['.env']
 vars:
   dep_folder: dependencies
   comp_folder: tyk-components
+  scripts_folder: scripts
 
 tasks:
   login:
@@ -13,26 +14,24 @@ tasks:
     cmds:
       - aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
 
+  bootstrap:
+    sumary: |
+      Bootstraps dashboard with an organization and user
+    dir: '{{.scripts_folder}}'
+    cmds:
+      - sleep 8
+      - ./dash-bootstrap.sh http://localhost:3000
+      - sleep 8
+
   local:
     sumary: |
       Deploys infrastructure locally using docker compose manifest
     deps: [init]
     cmds:
       - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose  -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose  -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} --profile master-datacenter up -d
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} --profile master-datacenter up -d
       - docker ps
-
-  local-ha-1:
-    sumary: |
-      Deploys ha infrastructure locally using docker compose manifest
-    deps: [init]
-    cmds:
-      - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} up -d
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} up -d
-      - docker ps
-
 
   local-ha:
     sumary: |
@@ -40,8 +39,11 @@ tasks:
     deps: [init]
     cmds:
       - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} up -d
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} up -d
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile master-datacenter up -d 
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile master-datacenter up -d
+      - task: bootstrap
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile slave-datacenter up -d 
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile slave-datacenter up -d
       - docker ps
 
 
@@ -49,8 +51,8 @@ tasks:
     sumary: |
       Tears down all local infrastructure including networking
     cmds:
-      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} --profile all down
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} --profile all down
       - docker network rm tyk-network || true
       - docker ps
 
@@ -58,8 +60,8 @@ tasks:
     sumary: |
       Tears down all local infrastructure including networking
     cmds:
-      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} down
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} down
+      - docker compose -f {{ .dep_folder }}/docker-compose.yml -f {{ .dep_folder }}/docker-compose-ha.yml -f {{ .dep_folder }}/docker-compose.volumes.yml -f {{ .dep_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile all down
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile all down
       - docker network rm tyk-network || true
       - docker ps
 
@@ -196,4 +198,14 @@ tasks:
       - curl -s --fail http://"{{.HOST}}":8080/hello
     vars:
       HOST: "${COMPOSE_PROJECT_NAME}.${TYK_DEV_DOMAIN}"
+
+  pytest:
+    sumary: |
+      Deploys pytest container that runs against local infrastructure using docker compose manifest
+    deps: [init]
+    cmds:
+      - echo "This is the ${COMPOSE_PROJECT_NAME} project "
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile test up -d
+      - docker ps
+
     
