@@ -44,7 +44,7 @@ user_json=$(jq --arg oid $orgid '. + { org_id: $oid }' <<<'{
   "active": true
 }')
 
-# 2. Create user in org from (1)
+#2. Create user in org from (1)
 user_auth=$(curlf --header "admin-auth: 12345" \
 		  --data "$user_json" \
 		  ${db_base}/admin/users | jq -r '.Message')
@@ -56,6 +56,7 @@ sed -i "" "s/TYK_GW_SLAVEOPTIONS_APIKEY=.*/TYK_GW_SLAVEOPTIONS_APIKEY=${user_aut
 uid=$(curlf --header "authorization: $user_auth" \
 	    ${db_base}/api/users | jq -r '.users[0].id')
 
+echo "UID= $uid"
 # 4. Set password with user authentication
 curlf --header "authorization: $user_auth" \
       --data '{"new_password": "supersekret"}' \
@@ -65,6 +66,18 @@ curlf --header "authorization: $user_auth" \
 curlf --header "authorization: $user_auth" \
       --header "Content-Type:application/json" \
       --data @${data_path}/api.json \
+      ${db_base}/api/apis
+
+# 6. Create open API using dash API
+curlf --header "authorization: $user_auth" \
+      --header "Content-Type:application/json" \
+      --data @data/open.json \
+      ${db_base}/api/apis
+
+# 7. Create token API using dash API
+curlf --header "authorization: $user_auth" \
+      --header "Content-Type:application/json" \
+      --data @${data_path}/token.json \
       ${db_base}/api/apis
 
 echo "DONE"

@@ -8,7 +8,7 @@ services:
 
   tyk-mdcb:
     profiles: ["all", "master-datacenter"]
-    image: tykio/${MDCB_IMAGE}
+    image: ${REGISTRY}/${MDCB_IMAGE}
     container_name: tyk-mdcb
     ports:
     - "9090:9090"
