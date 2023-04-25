@@ -45,3 +45,6 @@ task clean-remote
 task --list-all
 ```
 
+#TO-DO
+- Explain how to bundle certificates. Document how to generate
+- 

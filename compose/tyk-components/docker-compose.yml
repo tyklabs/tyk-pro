@@ -1,46 +1,63 @@
 version: "3.9"
 services:
   upstream:
+    profiles: ["all", "master-datacenter"]
     container_name: httpbin.org
     image: kennethreitz/httpbin
     restart: always
 
-  gateway:
-    container_name: gateway
+  tyk-mdcb:
+    profiles: ["all", "master-datacenter"]
+    image: ${REGISTRY}/${MDCB_IMAGE}
+    container_name: tyk-mdcb
+    ports:
+    - "9090:9090"
+    env_file:
+      - ../configsets/${CONFIGSET}/tyk-mdcb.env
+    entrypoint: ["/opt/tyk-sink/tyk-sink", "--conf", "/conf/tyk-sink.conf"]
+
+  tyk-gateway:
+    profiles: ["all", "master-datacenter"]
+    container_name: tyk-gateway
     image: ${REGISTRY}/${GW_IMAGE}
     env_file:
-      - ../configsets/${CONFIGSET}/gw.env
+      - ../configsets/${CONFIGSET}/tyk-gateway.env
     ports:
       - "6000:6000"
       - "8003:8003"
       - "8080:8080" 
-    # entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
 
-  dashboard:
-    container_name: dashboard
+  tyk-dashboard:
+    profiles: ["all", "master-datacenter"]
+    container_name: tyk-dashboard
     image: ${REGISTRY}/${DB_IMAGE}
     ports:
       - "3000:3000"
       - "5000:5000"
       - "1026:1025"
     env_file:
-      - ../configsets/${CONFIGSET}/dash.env
-    # entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
+      - ../configsets/${CONFIGSET}/tyk-analytics.env
+    entrypoint: ["/opt/tyk-dashboard/tyk-analytics", "--conf", "/conf/tyk-analytics.conf"]
 
   tyk-pump:
+      profiles: ["all", "master-datacenter"]
       container_name: tyk-pump
       image: ${REGISTRY}/${PUMP_IMAGE}
-      env_file:
-        - ../configsets/${CONFIGSET}/pump.env
       ports:    
           - "8061:8061"
+      env_file:
+        - ../configsets/${CONFIGSET}/tyk-pump.env
+      entrypoint: ["/opt/tyk-pump/tyk-pump", "--conf", "/conf/tyk-pump.conf"]
   bundle-server:
+      profiles: ["all", "master-datacenter"]
       container_name: bundle-server
       build:
         context: ./bundle_server
       ports:
           - "8000:8000"
   federation-server:
+      profiles: ["all", "master-datacenter"]
       container_name: federation
       image: agatawitkowska/federation-example
       ports:
@@ -49,6 +66,7 @@ services:
           - "4002:4002"
           - "4003:4003"
   openldap:
+      profiles: ["all", "master-datacenter"]
       image: osixia/openldap:1.5.0
       container_name: openldap
       ports:
@@ -59,16 +77,19 @@ services:
       - LDAP_READONLY_USER_USERNAME=read-only-admin
       - LDAP_READONLY_USER_PASSWORD=password
   graphql-faker:
+      profiles: ["all", "master-datacenter"]
       container_name: graphql-faker
       image: apisguru/graphql-faker:latest
       command: "faker-schema.graphql"
       ports:
           - "9002:9002"
   test:
+    profiles: ["all", "test"]
     container_name: test
     image: ${REGISTRY}/${TEST_IMAGE}
     env_file:
       - ../configsets/${CONFIGSET}/test.env
+    command: ${TESTSUITE}
 
 networks:
   default:

@@ -3,4 +3,3 @@ services:
   redis:
     volumes:
       - ${VOLUME_FOLDER}/redis/certs:/opt/bitnami/redis/certs
-      # - ${VOLUME_FOLDER}/redis:/usr/local/etc/redis

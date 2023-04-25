@@ -18,7 +18,7 @@ x-aws-cloudformation:
         - subnet-0bbe276402b376013   #Public-1b
         # - subnet-04d34f3e5863af20a #Private-1a
 services:
-  gateway:
+  tyk-gateway:
     environment:
       - TYK_GW_STORAGE_HOST=redis.${COMPOSE_PROJECT_NAME}-dependencies.local
     entrypoint: []
