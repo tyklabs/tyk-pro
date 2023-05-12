@@ -2,6 +2,14 @@
 # - can run in parallel
 # - reuse data and source blocks
 
+locals {
+    common_tags = {
+    ou        = "syse"
+    purpose   = "cd"
+    managedby = "packer"
+  }
+}
+
 data "amazon-ami" "base" {
   filters = {
     architecture        = "x86_64"
@@ -30,11 +38,8 @@ source "amazon-ebs" "component" {
     most_free = true
     random    = false
   }
-  run_tags = {
-    ou        = "syse"
-    purpose   = "cd"
-    managedby = "packer"
-  }
+  tags = local.common_tags
+  run_tags = local.common_tags
 }
 
 # Redis 6.0
@@ -44,17 +49,10 @@ build {
     ami_name = "TykCI Redis 6.0"
   }
 
-  provisioner "file" {
-    destination = "./r60.yml"
-    source      = "playbooks/r60.yml"
+  provisioner "ansible-local" {
+    playbook_file = "playbooks/r60.yml"
+    command = "sudo ansible-playbook"
   }
-
-  provisioner "shell" {
-    inline = [
-      "ansible-playbook -i localhost r60.yml"
-    ]
-  }
-
 }
 
 # Mongo 4.4
@@ -64,14 +62,8 @@ build {
     ami_name = "TykCI Mongo 4.4"
   }
 
-  provisioner "file" {
-    destination = "./m44.yml"
-    source      = "playbooks/m44.yml"
-  }
-
-  provisioner "shell" {
-    inline = [
-      "ansible-playbook -i localhost m44.yml"
-    ]
+  provisioner "ansible-local" {
+    playbook_file = "playbooks/m44.yml"
+    command = "sudo ansible-playbook"
   }
 }

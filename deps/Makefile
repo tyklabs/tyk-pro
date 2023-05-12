@@ -13,3 +13,6 @@ launch:
 	--query 'Reservations[*].Instances[*].[PublicIpAddress]' \
 	--output text))
 	@echo ssh -i ~/.ssh/ci.pem -l admin $(ip)
+
+list:
+	aws ec2 describe-images --owners 754489498669 --query "Images[*].[ImageId,Name,CreationDate]" --output text
