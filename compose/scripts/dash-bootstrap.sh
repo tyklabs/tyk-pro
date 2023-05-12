@@ -51,6 +51,7 @@ user_auth=$(curlf --header "admin-auth: 12345" \
 
 echo "TYK_GW_SLAVEOPTIONS_APIKEY=${user_auth}"
 sed -i "" "s/TYK_GW_SLAVEOPTIONS_APIKEY=.*/TYK_GW_SLAVEOPTIONS_APIKEY=${user_auth}/g" ${configset_path}/${CONFIGSET}/*.env
+sed -i "" "s/USER_API_SECRET=.*/USER_API_SECRET=${user_auth}/g" ${configset_path}/${CONFIGSET}/*.env
 
 # 3. Get user id of newly created user using user authentication
 uid=$(curlf --header "authorization: $user_auth" \
@@ -66,18 +67,6 @@ curlf --header "authorization: $user_auth" \
 curlf --header "authorization: $user_auth" \
       --header "Content-Type:application/json" \
       --data @${data_path}/api.json \
-      ${db_base}/api/apis
-
-# 6. Create open API using dash API
-curlf --header "authorization: $user_auth" \
-      --header "Content-Type:application/json" \
-      --data @data/open.json \
-      ${db_base}/api/apis
-
-# 7. Create token API using dash API
-curlf --header "authorization: $user_auth" \
-      --header "Content-Type:application/json" \
-      --data @${data_path}/token.json \
       ${db_base}/api/apis
 
 echo "DONE"
