@@ -81,6 +81,14 @@ services:
       - ../configsets/${CONFIGSET}/test.env
     command: ${TESTSUITE}
 
+  restcountries:
+      container_name: restcountries
+      image: bigpapoo/restcountries:1.0
+      
+  trevorblades:
+      container_name: trevorblades
+      image: mangomm/trevorblades-countries
+
 networks:
   default:
     name: tyk-network
