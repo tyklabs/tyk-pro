@@ -1,0 +1,31 @@
+name: Integration tests
+
+on:
+  pull_request:
+  workflow_call:
+
+env:
+  SLACK_CLI_TOKEN: ${{ secrets.BENDER_TOKEN }}
+  GOPRIVATE: github.com/TykTechnologies
+  
+jobs:
+  pro:
+    name: Pro
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::754489498669:role/ecr_rw_tyk
+          role-session-name: cipush
+          aws-region: eu-central-1
+
+      - uses: aws-actions/amazon-ecr-login@v1
+
+      - uses: actions/checkout@v3
+
+      - name: Bring up env
+        working-directory: auto
+        run: |
+          docker compose -f tyk.yml -f deps.yml -p master --env-file master.env up -d
+          docker run --rm --name tat --network master_default --env-file=test.env 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-automated-tests:master

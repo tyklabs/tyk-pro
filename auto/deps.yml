@@ -1,0 +1,73 @@
+version: "3.9"
+services:
+  redis:
+    container_name: redis
+    image: bitnami/redis:6.2
+    env_file:
+      - redis.env
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "--raw", "incr", "ping" ]
+      interval: 5s
+      retries: 10
+      start_period: 2s
+      timeout: 10s
+    # command: [ "redis-server", "/usr/local/etc/redis/redis.conf" ]
+
+  mongo:
+    container_name: mongo
+    image: mongo:4.4
+    env_file:
+      - mongo.env
+    # environment:
+    #   - MONGO_INITDB_ROOT_USERNAME=root
+    #   - MONGO_INITDB_ROOT_PASSWORD=123456789
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongo mongo:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  bundle-server:
+    container_name: bundle-server
+    build:
+      context: ./bundle_server
+    ports:
+      - "8000:8000"
+
+  federation-server:
+    container_name: federation-server
+    image: agatawitkowska/federation-example
+    ports:
+      - "4000:4000"
+      - "4001:4001"
+      - "4002:4002"
+      - "4003:4003"
+
+  openldap:
+    container_name: openldap
+    image: osixia/openldap:1.5.0
+    ports:
+      - '389:389'
+      - '636:636'
+    environment:
+      - LDAP_READONLY_USER=true
+      - LDAP_READONLY_USER_USERNAME=read-only-admin
+      - LDAP_READONLY_USER_PASSWORD=password
+
+  graphql-faker:
+    container_name: graphql-faker
+    image: apisguru/graphql-faker:latest
+    command: "faker-schema.graphql"
+    ports:
+      - "9002:9002"
+
+  upstream:
+    container_name: httpbin.org
+    image: kennethreitz/httpbin
+    restart: always
+

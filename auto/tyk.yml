@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  tyk:
+    container_name: tyk
+    image: ${tyk_image}
+    env_file:
+      - tyk.env
+    ports:
+      - "6000:6000"
+      - "8003:8003"
+      - "8080:8080" 
+
+  tyk-analytics:
+    container_name: tyk-analytics
+    image: ${tyk_analytics_image}
+    ports:
+      - "3000:3000"
+      - "5000:5000"
+      - "1026:1025"
+    env_file:
+      - tyk-analytics.env
+
+  tyk-pump:
+    container_name: tyk-pump
+    image: ${tyk_pump_image}
+    ports:    
+      - "8061:8061"
+    env_file:
+      - tyk-pump.env
+
+  tyk-sink:
+    container_name: tyk-sink
+    image: ${tyk_sink_image}
+    ports:
+    - "9090:9090"
+    env_file:
+      - tyk-sink.env
