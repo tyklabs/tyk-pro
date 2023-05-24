@@ -61,12 +61,7 @@ jobs:
       - name: Run pytest
         working-directory: /app
         run: |
-          echo " This is PWD"
-          pwd
-          echo " This is LS"
-          ls
-          echo " This is LS /"
-          ls /
-          #. ./auto/test.env
-          #pytest 
+          echo "This is home: $HOME"
+          . $HOME/tyk-pro/auto/test.env
+          pytest 
           
