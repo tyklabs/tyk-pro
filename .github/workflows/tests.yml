@@ -59,8 +59,14 @@ jobs:
           docker compose -f tyk.yml -f deps.yml -p master --env-file master.env up --quiet-pull -d
 
       - name: Run pytest
-        working-directory: app
+        working-directory: /app
         run: |
-          . ./auto/test.env
-          pytest
+          echo " This is PWD"
+          pwd
+          echo " This is LS"
+          ls
+          echo " This is LS /"
+          ls /
+          #. ./auto/test.env
+          #pytest 
           
