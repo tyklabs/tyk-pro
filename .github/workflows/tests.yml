@@ -61,7 +61,7 @@ jobs:
       - name: Run pytest
         working-directory: /app
         run: |
-          echo "This is home: $HOME"
-          . $HOME/tyk-pro/auto/test.env
+          echo "This is home: $GITHUB_WORKSPACE"
+          . $GITHUB_WORKSPACE/tyk-pro/auto/test.env
           pytest 
           
