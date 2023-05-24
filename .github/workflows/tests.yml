@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: ecr-login
     container:
-      image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-automated-tests:v1.0.0-rc1
+      image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-automated-tests:1.0.0-rc1
       credentials:
         username: AWS
         password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
