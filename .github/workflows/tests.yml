@@ -9,28 +9,28 @@ env:
   GOPRIVATE: github.com/TykTechnologies
 
 permissions:
-      id-token: write   # This is required for requesting the JWT
-      contents: read    # This is required for actions/checkout
+  id-token: write   # This is required for requesting the JWT
+  contents: read    # This is required for actions/checkout
 
 jobs:
   ecr-login:
     name: ecr-passwd
     runs-on: ubuntu-latest
   
-  outputs:
-    aws-ecr-pass: ${{ steps.ecr-pass.outputs.ECR_PASS }}
+    outputs:
+      aws-ecr-pass: ${{ steps.ecr-pass.outputs.ECR_PASS }}
 
-  steps:
-    - uses: aws-actions/configure-aws-credentials@v2
-      with:
-        role-to-assume: arn:aws:iam::754489498669:role/ecr_rw_tyk
-        role-session-name: cipush
-        aws-region: eu-central-1
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::754489498669:role/ecr_rw_tyk
+          role-session-name: cipush
+          aws-region: eu-central-1
 
-    - name: Get ecr password
-      id: ecr-pass
-      run: |
-        echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
+      - name: Get ecr password
+        id: ecr-pass
+        run: |
+          echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
 
   pro:
     name: Pro
