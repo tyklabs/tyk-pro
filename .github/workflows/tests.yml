@@ -55,9 +55,11 @@ jobs:
 
       - name: Bring up env
         working-directory: auto
-        shell: bash
         run: |
           docker compose -f tyk.yml -f deps.yml -p master --env-file master.env up --quiet-pull -d
-          source ./test.env
+
+      - name: Run pytest
+        run: |
+          . ./auto/test.env
           pytest
           
