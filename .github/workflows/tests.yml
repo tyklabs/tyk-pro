@@ -55,6 +55,9 @@ jobs:
 
       - name: Bring up env
         working-directory: auto
+        env
         run: |
-          docker compose -f tyk.yml -f deps.yml -p master --env-file master.env up -d
-          docker run --rm --name tat --network master_default --env-file=test.env 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-automated-tests:master
+          docker compose -f tyk.yml -f deps.yml -p master --env-file master.env up --quiet-pull -d
+          source ./test.env
+          pytest
+          
