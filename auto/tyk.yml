@@ -5,6 +5,8 @@ services:
     image: ${tyk_image}
     env_file:
       - tyk.env
+    volumes:
+      - ${certs_folder}:/etc/ssl/certs
     ports:
       - "6000:6000"
       - "8003:8003"
