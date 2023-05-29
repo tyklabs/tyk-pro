@@ -6,29 +6,37 @@ services:
     env_file:
       - tyk.env
     volumes:
-      - ${certs_folder}:/etc/ssl/certs
+      - ${certs_dir}:/etc/ssl/certs
+      - ${confs_dir}:/conf/
     ports:
       - "6000:6000"
       - "8003:8003"
-      - "8080:8080" 
+      - "8080:8080"
+    command: [ "--conf", "/conf/tyk.conf" ]
 
   tyk-analytics:
     container_name: tyk-analytics
     image: ${tyk_analytics_image}
+    volumes:
+      - ${confs_dir}:/conf/
     ports:
       - "3000:3000"
       - "5000:5000"
       - "1026:1025"
     env_file:
       - tyk-analytics.env
+    command: [ "--conf", "/conf/tyk-analytics.conf" ]
 
   tyk-pump:
     container_name: tyk-pump
     image: ${tyk_pump_image}
+    volumes:
+      - ${confs_dir}:/conf
     ports:    
       - "8061:8061"
     env_file:
       - tyk-pump.env
+    command: [ "--conf", "/conf/tyk-pump.conf" ]
 
   tyk-sink:
     container_name: tyk-sink

@@ -12,42 +12,56 @@ You need an access token and a functional AWS CLI with the subaccount to publish
 % aws ecr get-login-password --region eu-central-1 | docker login --username AWS --password-stdin 754489498669.dkr.ecr.eu-central-1.amazonaws.com
 ```
 
-## Folder estructure (WIP)
-```
-tyk-pro-demo/
-├─ confs/
-│  ├─ oss/
-│  │  ├─ tyk.conf
-│  ├─ pro/
-│  ├─ proha/
-│  ├─ env n.../
-├─ data/
-│  ├─ oss/
-│  │  ├─ api.json
-│  │  ├─ org.json
-│  ├─ pro/
-│  ├─ proha/
-│  ├─ env n.../
-├─ envs/
-│  ├─ oss/
-│  │  ├─ compose.yml
-│  ├─ pro/
-│  ├─ proha/
-│  ├─ env n.../
-├─ scripts/
-│  ├─ oss/
-│  │  ├─ bootstrap.sh
-│  ├─ pro/
-│  ├─ proha/
-│  ├─ env n.../
-├─ Makefile
-```
-
 # PREREQUISITES
 - docker compose v2 or above (not docker-compose)
 - aws integration account credentials
 - dashboard license (fill in envs/*.env files)
 - mdcb license (fill in envs/*.env files)
+
+# Testing using tyk-automated-tests
+
+## Directory structure
+```
+auto
+├── bootstrap.env
+├── bundle_server -> ../compose/tyk-components/bundle_server
+├── deps.yml
+├── Makefile
+├── master.env
+├── mongo.env
+├── pro -> ../compose/confs/pro-test
+├── pro.yml
+├── redis.env
+├── tyk-analytics.env
+├── tyk.env
+├── tyk-pump.env
+└── tyk-sink.env
+```
+
+`pro.yml` is a compose file defining the Tyk components in a Pro deployment.
+`deps.yml` contains the dependencies needed and can be reused between deployment models.
+`bootstrap.env` contains the configuration required so that the deployment can come up ready to serve requests
+`mongo.env` and `redis.env` are self-explanatory
+`tyk*.env` contain configuration for the Tyk components that are available only at runtime and are defined by the deployment model.
+`pro` contains configuration files for the Tyk components
+
+The configuration for the tyk components are provided via config files and env variables. The distinction between the two modes of supplying configuration is that config parameters that are dependent on the deployment env are in the env file while all other config is in the config file.
+
+## Bringing an env up
+``` shellsession
+$ cd auto
+# define an alias for later
+$ alias master="docker compose -f pro.yml -f deps.yml -p master --env-file master.env --env-file=bootstrap.env"
+# confs_dir points to the root of the config dir
+$ confs_dir=./pro master up -d
+```
+
+## Running tests
+In the `tyk-automated-tests` repo,
+
+``` shellsession
+$ pytest -c pytest_ci.ini [dir or file]
+```
 
 # Example environments
 
@@ -63,16 +77,6 @@ tyk-pro-demo/
 
 ![image](envs/proha.png)
 # How to execute (WIP can change)
-## OSS
-```
-# gw test
-make -f Makefile.oss oss
-# pump test
-make -f Makefile.oss tyk-pump
-# destroy
-make -f Makefile.oss clean
-```
-
 ## PRO
 ```
 # dashboard & gw test
@@ -81,13 +85,7 @@ make -f Makefile.pro pro
 make -f Makefile.pro clean
 ```
 
-## PRO + HA
-```
-# dashboard & gw & mdcb test
-make -f Makefile.proha proha
-make -f Makefile.proha clean
-```
-# Test Explanation
+# Test Explanation (do not read)
 - OSS
 	- gw:
 		- Add keyless api definition into /app folder 
