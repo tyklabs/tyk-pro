@@ -28,10 +28,8 @@ auto
 ├── deps.yml
 ├── Makefile
 ├── master.env
-├── mongo.env
 ├── pro -> ../compose/confs/pro-test
 ├── pro.yml
-├── redis.env
 ├── tyk-analytics.env
 ├── tyk.env
 ├── tyk-pump.env
@@ -41,7 +39,6 @@ auto
 `pro.yml` is a compose file defining the Tyk components in a Pro deployment.
 `deps.yml` contains the dependencies needed and can be reused between deployment models.
 `bootstrap.env` contains the configuration required so that the deployment can come up ready to serve requests
-`mongo.env` and `redis.env` are self-explanatory
 `tyk*.env` contain configuration for the Tyk components that are available only at runtime and are defined by the deployment model.
 `pro` contains configuration files for the Tyk components
 
@@ -51,9 +48,9 @@ The configuration for the tyk components are provided via config files and env v
 ``` shellsession
 $ cd auto
 # define an alias for later
-$ alias master="docker compose -f pro.yml -f deps.yml -p master --env-file master.env --env-file=bootstrap.env"
 # confs_dir points to the root of the config dir
-$ confs_dir=./pro master up -d
+$ alias master="confs_dir=./pro docker compose -f pro.yml -f deps.yml -p master --env-file master.env --env-file=bootstrap.env"
+$ master up -d
 ```
 
 ## Running tests

@@ -3,8 +3,8 @@ services:
   redis:
     container_name: redis
     image: bitnami/redis:6.2
-    env_file:
-      - redis.env
+    environment:
+      - REDIS_PASSWORD=my777godpassUNBREAKABLE..
     ports:
       - "6379:6379"
     healthcheck:
