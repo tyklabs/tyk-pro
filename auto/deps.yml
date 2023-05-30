@@ -72,10 +72,10 @@ services:
     restart: always
 
   restcountries:
-      container_name: restcountries
-      image: bigpapoo/restcountries:1.0
+    container_name: restcountries
+    image: bigpapoo/restcountries:1.0
       
   trevorblades:
-      container_name: trevorblades
-      image: mangomm/trevorblades-countries
+    container_name: trevorblades
+    image: mangomm/trevorblades-countries
 

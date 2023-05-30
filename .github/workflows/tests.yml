@@ -56,7 +56,7 @@ jobs:
       - name: master env
         working-directory: auto
         run: |
-          confs_dir=./pro docker compose -f ${{ github.job }}.yml -f deps.yml -p master --env-file master.env --env-file tat.env up --quiet-pull -d
+          confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml -p master --env-file master.env --env-file tat.env up --quiet-pull -d
 
       - name: Run pytest
         working-directory: /app
