@@ -2,32 +2,52 @@ name: Integration tests
 
 on:
   pull_request:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       tat-tests:
-        required: true
         description: Run these tests from tyk-automated-tests to run, added to the pytest command line
         type: string
         default: 'tests/dashboard_admin_api'
       tyk-version:
-        required: true
+        description: ECR docker tag to use
         type: string
         default: master
       tyk-analytics-version:
-        required: true
+        description: ECR docker tag to use
         type: string
         default: master
       tyk-pump-version:
-        required: true
+        description: ECR docker tag to use
         type: string
         default: master
       tyk-sink-version:
-        required: true
+        description: ECR docker tag to use
+        type: string
+        default: master
+  workflow_call:
+    inputs:
+      tat-tests:
+        description: Run these tests from tyk-automated-tests to run, added to the pytest command line
+        type: string
+        default: 'tests/dashboard_admin_api'
+      tyk-version:
+        description: ECR docker tag to use
+        type: string
+        default: master
+      tyk-analytics-version:
+        description: ECR docker tag to use
+        type: string
+        default: master
+      tyk-pump-version:
+        description: ECR docker tag to use
+        type: string
+        default: master
+      tyk-sink-version:
+        description: ECR docker tag to use
         type: string
         default: master
 
 env:
-  SLACK_CLI_TOKEN: ${{ secrets.BENDER_TOKEN }}
   GOPRIVATE: github.com/TykTechnologies
 
 permissions:
@@ -81,11 +101,12 @@ jobs:
         working-directory: auto
         run: |
           echo "registry=${{ steps.ecr.outputs.registry }}
-          tyk_sink_image=${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
-          tyk_image=${registry}/tyk:${{ inputs.tyk-version || 'master' }}
-          tyk_analytics_image=${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'master' }}
-          tyk_pump_image=${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }}" > versions.env
+          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
+          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
+          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'master' }}
+          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }}" > versions.env
           # bring up env
+          cat versions.env
           confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
       - name: Run pytest
