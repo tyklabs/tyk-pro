@@ -3,6 +3,28 @@ name: Integration tests
 on:
   pull_request:
   workflow_call:
+    inputs:
+      tat-tests:
+        required: true
+        description: Run these tests from tyk-automated-tests to run, added to the pytest command line
+        type: string
+        default: 'tests/dashboard_admin_api'
+      tyk-version:
+        required: true
+        type: string
+        default: master
+      tyk-analytics-version:
+        required: true
+        type: string
+        default: master
+      tyk-pump-version:
+        required: true
+        type: string
+        default: master
+      tyk-sink-version:
+        required: true
+        type: string
+        default: master
 
 env:
   SLACK_CLI_TOKEN: ${{ secrets.BENDER_TOKEN }}
@@ -32,8 +54,9 @@ jobs:
         run: |
           echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
 
+# The job id corresponds to the environment type that the tests will run on
   pro:
-    name: Pro
+    name: tyk-automated-tests on Tyk Pro
     runs-on: ubuntu-latest
     needs: ecr-login
     container:
@@ -49,18 +72,24 @@ jobs:
           role-session-name: cipush
           aws-region: eu-central-1
 
-      - uses: aws-actions/amazon-ecr-login@v1
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
       - uses: actions/checkout@v3
 
-      - name: master env
+      - name: env up
         working-directory: auto
         run: |
-          confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml -p master --env-file master.env --env-file tat.env up --quiet-pull -d
+          echo 'registry=${{ steps.ecr.outputs.registry }}
+          tyk_sink_image=${registry}/tyk-sink:${{ inputs.tyk-sink-version || \'master\' }}
+          tyk_image=${registry}/tyk:${{ inputs.tyk-version || \'master\' }}
+          tyk_analytics_image=${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || \'master\' }}
+          tyk_pump_image=${registry}/tyk-pump:${{ inputs.tyk-pump-version || \'master\' }}' > versions.env
+          confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
       - name: Run pytest
         working-directory: /app
         run: |
           echo "This is home: $GITHUB_WORKSPACE"
           . $GITHUB_WORKSPACE/auto/test.env
-          pytest
+          pytest ${{ inputs.tat-tests }}
