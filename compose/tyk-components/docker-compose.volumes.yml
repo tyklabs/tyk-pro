@@ -24,3 +24,7 @@ services:
   test:
     volumes:
       - ${VOLUME_FOLDER}/test:/app/test-data
+
+  graphql-faker:
+      volumes:
+          - ${VOLUME_FOLDER}/test/graphql-faker/faker-schema.graphql:/workdir/faker-schema.graphql
