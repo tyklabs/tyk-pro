@@ -109,6 +109,11 @@ jobs:
           cat versions.env
           confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
+      - name: Docker ps
+        shell: bash
+        run: docker ps
+  
+
       - name: Waiting for dashboard
         shell: bash
         run: |
