@@ -117,8 +117,13 @@ jobs:
       - name: Waiting for dashboard
         shell: bash
         run: |
-          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]]; do sleep 60 && echo "waiting for dashboard '$(date +"%T")'"; done
-        timeout-minutes: 15    
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
+            sleep 60
+            echo "waiting for dashboard '$(date +"%T")'"
+            docker ps -a
+            docker logs tyk-analytics
+          done
+        timeout-minutes: 4   
 
       - name: Run pytest
         working-directory: /app
