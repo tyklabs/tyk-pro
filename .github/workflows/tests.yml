@@ -109,20 +109,14 @@ jobs:
           cat versions.env
           confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
+      - name: Waiting for dashboard
+        run: |
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]]; do sleep 60 && echo "waiting for dashboard '$(date +"%T")'"; done
+        timeout-minutes: 15    
+
       - name: Run pytest
         working-directory: /app
-        env:
-          TYK_TEST_BASE_URL: http://tyk-analytics:3000/
-          TYK_TEST_GW_URL: https://tyk:8080/
-          TYK_TEST_MONGODB: mongo:27017
-          TYK_TEST_REDIS: redis
-          TYK_TEST_DB_ADMIN: 12345
-          TYK_TEST_GW_SECRET: 352d20ee67be67f6340b4c0605b044b7
-          TYK_TEST_DB_NAME: tyk_analytics
-          TYK_TEST_FEDERATION_HOST: federation
-          TYK_TEST_GRAPHQL_FAKER_HOST: graphql-faker
-          TYK_TEST_GRAPHQL_FAKER_SCHEMA_PATH: test-data/graphql-faker/faker-schema.graphql
         run: |
           echo "This is home: $GITHUB_WORKSPACE"
-          # . $GITHUB_WORKSPACE/auto/test.env
+          . $GITHUB_WORKSPACE/auto/test.env
           pytest ${{ inputs.tat-tests }}
