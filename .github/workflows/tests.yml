@@ -100,7 +100,7 @@ jobs:
       - name: env up
         working-directory: auto
         env:
-          confs_dir: $GITHUB_WORKSPACE/auto/${{ github.job }}
+          confs_dir: ${{ github.workspace }}/auto/${{ github.job }}
         run: |
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
