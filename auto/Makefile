@@ -10,4 +10,10 @@ endif
 master.env:
 	docker compose -f tyk.yml -f deps.yml -p $(@:.env=) --env-file $@ up -d
 
+up:
+	docker compose -f pro.yml -f deps.yml --env-file master.env --env-file tat.env -p test-proj up -d
+
+down:
+	docker compose -f pro.yml -f deps.yml --env-file master.env --env-file tat.env -p test-proj down
+
 .PHONY: master.env
