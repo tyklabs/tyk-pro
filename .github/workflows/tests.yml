@@ -110,6 +110,7 @@ jobs:
           confs_dir=./${{ github.job }} docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
       - name: Waiting for dashboard
+        shell: bash
         run: |
           while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]]; do sleep 60 && echo "waiting for dashboard '$(date +"%T")'"; done
         timeout-minutes: 15    
