@@ -84,6 +84,8 @@ jobs:
       credentials:
         username: AWS
         password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
+      volumes:
+        - ${{ github.workspace }}:/workspace
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -102,8 +104,10 @@ jobs:
         env:
           confs_dir: ${{ github.workspace }}/auto/${{ github.job }}
         run: |
-          ls -la ${{ github.workspace }}/tmp
           echo "Github Workspace env: $GITHUB_WORKSPACE"
+          ls $GITHUB_WORKSPACE || true
+          echo "Show mounted workspace"
+          ls /workspace || true
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
