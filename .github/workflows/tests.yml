@@ -103,6 +103,7 @@ jobs:
           confs_dir: ${{ github.workspace }}/auto/${{ github.job }}
         run: |
           ls -la ${{ github.workspace }}/tmp
+          echo "Github Workspace env: $GITHUB_WORKSPACE"
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
