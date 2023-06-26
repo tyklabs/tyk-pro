@@ -6,16 +6,6 @@ services:
     image: kennethreitz/httpbin
     restart: always
 
-  tyk-mdcb:
-    profiles: ["all", "master-datacenter"]
-    image: ${REGISTRY}/${MDCB_IMAGE}
-    container_name: tyk-mdcb
-    ports:
-    - "9090:9090"
-    env_file:
-      - ../configsets/${CONFIGSET}/tyk-mdcb.env
-    entrypoint: ["/opt/tyk-sink/tyk-sink", "--conf", "/conf/tyk-sink.conf"]
-
   tyk-gateway:
     profiles: ["all", "master-datacenter"]
     container_name: tyk-gateway
@@ -26,7 +16,12 @@ services:
       - "6000:6000"
       - "8003:8003"
       - "8080:8080" 
-    entrypoint: ["/opt/tyk-gateway/tyk", "--conf", "/conf/tyk.conf"]
+    entrypoint: ["/bin/bash"]
+    command:
+      - "-c"
+      - |
+        update-ca-certificates
+        /opt/tyk-gateway/tyk --conf /conf/tyk.conf
 
   tyk-dashboard:
     profiles: ["all", "master-datacenter"]

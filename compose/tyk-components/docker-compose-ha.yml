@@ -1,5 +1,16 @@
 version: "3.9"
 services:
+
+  tyk-mdcb:
+    profiles: ["all", "master-datacenter"]
+    image: ${REGISTRY}/${MDCB_IMAGE}
+    container_name: tyk-mdcb
+    ports:
+    - "9090:9090"
+    env_file:
+      - ../configsets/${CONFIGSET}/tyk-mdcb.env
+    entrypoint: ["/opt/tyk-sink/tyk-sink", "--conf", "/conf/tyk-sink.conf"]
+    
   tyk-gateway-datacenter-1-alfa:
     profiles: ["all", "slave-datacenter"]
     image: ${REGISTRY}/${GW_ALFA_IMAGE}

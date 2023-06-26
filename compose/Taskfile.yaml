@@ -205,7 +205,24 @@ tasks:
     deps: [init]
     cmds:
       - echo "This is the ${COMPOSE_PROJECT_NAME} project "
-      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose-ha.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -f {{ .comp_folder }}/docker-compose.volumes-ha.yml -p ${COMPOSE_PROJECT_NAME} --profile test up -d
+      - docker compose -f {{ .comp_folder }}/docker-compose.yml -f {{ .comp_folder }}/docker-compose.volumes.yml -p ${COMPOSE_PROJECT_NAME} --profile test up -d
       - docker ps
 
+  push-images:
+    sumary: |
+      Downloads stable images from tyk.io and pushes to ecr repo
+    cmds:
+      - docker pull tykio/tyk-dashboard:v4.3.3
+      - docker pull tykio/tyk-pump-docker-pub:v1.7.0
+      - docker pull tykio/tyk-mdcb-docker:v2.1.1
+      - docker pull tykio/tyk-gateway:v4.3.4
+      - docker tag tykio/tyk-dashboard:v4.3.3 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-analytics:v4.3.3
+      - docker tag tykio/tyk-pump-docker-pub:v1.7.0 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-pump:v1.7.0
+      - docker tag tykio/tyk-mdcb-docker:v2.1.1 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-sink:v2.1.1
+      - docker tag tykio/tyk-gateway:v4.3.4 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:v4.3.4
+      - task: login
+      - docker push 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-analytics:v4.3.3
+      - docker push 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-pump:v1.7.0
+      - docker push 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-sink:v2.1.1
+      - docker push 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk:v4.3.4
     
