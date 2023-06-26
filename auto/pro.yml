@@ -30,7 +30,14 @@ services:
       - "1026:1025"
     env_file:
       - tyk-analytics.env
-    command: [ "--conf", "/conf/tyk-analytics.conf" ]
+    entrypoint: ["/bin/bash"]
+    command:
+      - "-c"
+      - |
+        ls /conf
+        /opt/tyk-dashboard/tyk-analytics --conf /conf/tyk-analytics.conf
+    # command: [ "--conf", "/conf/tyk-analytics.conf" ]
+
 
   tyk-pump:
     container_name: tyk-pump
