@@ -103,11 +103,11 @@ jobs:
         run: |
             echo "-------CURRENT DIR--------"
             pwd
-            ls -R
-            echo "-------GH WORKSPACE--------"
-            ls -R ${{ github.workspace }}
-            exit 1
-#            cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
+#           ls -R
+#           echo "-------GH WORKSPACE--------"
+#           ls -R ${{ github.workspace }}
+#           exit 1
+#           cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
 #           ls /workspace/auto/pro
 #           cat /workspace/auto/pro/tyk-analytics.conf
 
@@ -115,7 +115,7 @@ jobs:
       - name: env up
         working-directory: auto
         env:
-          confs_dir: ${{ github.workspace }}/auto/${{ github.job }}
+          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
         run: |
           echo "CONFIG DIR: $confs_dir"
           echo "registry=${{ steps.ecr.outputs.registry }}
