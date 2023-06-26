@@ -104,6 +104,7 @@ jobs:
           ls /workspace/auto/pro
           cat /workspace/auto/pro/tyk-analytics.conf
 
+
       - name: env up
         working-directory: auto
         env:
@@ -122,6 +123,10 @@ jobs:
       - name: DEBUG STEP 2
         run: |
           docker inspect tyk-analytics
+
+      - name: DEBUG STEP 3
+        run: |
+          ls /__w/tyk-pro/tyk-pro/auto/pro   
 
       - name: Docker ps
         shell: bash
