@@ -84,8 +84,8 @@ jobs:
       credentials:
         username: AWS
         password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
-      volumes:
-        - ${{ github.workspace }}:/workspace
+# volumes:
+#   - {{ github.workspace }}:/workspace
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -101,14 +101,16 @@ jobs:
 
       - name: DEBUG STEP
         run: |
-          ls /workspace/auto/pro
-          cat /workspace/auto/pro/tyk-analytics.conf
+            ls ${{ github.workspace }}/auto/${{ github.job }}
+            cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
+#           ls /workspace/auto/pro
+#           cat /workspace/auto/pro/tyk-analytics.conf
 
 
       - name: env up
         working-directory: auto
         env:
-          confs_dir: ./${{ github.job }}
+          confs_dir: ${{ github.workspace }}/auto/${{ github.job }}
         run: |
           echo "CONFIG DIR: $confs_dir"
           echo "registry=${{ steps.ecr.outputs.registry }}
