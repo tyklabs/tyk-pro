@@ -101,8 +101,13 @@ jobs:
 
       - name: DEBUG STEP
         run: |
-            ls ${{ github.workspace }}/auto/${{ github.job }}
-            cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
+            echo "-------CURRENT DIR--------"
+            pwd
+            ls -R
+            echo "-------GH WORKSPACE--------"
+            ls -R ${{ github.workspace }}
+            exit 1
+#            cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
 #           ls /workspace/auto/pro
 #           cat /workspace/auto/pro/tyk-analytics.conf
 
