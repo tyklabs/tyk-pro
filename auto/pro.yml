@@ -34,7 +34,9 @@ services:
     command:
       - "-c"
       - |
-        ls /conf
+        echo "HERE COMES THE CONF"
+        ls -R /conf
+        echo "HERE ENDS THE CONF"
         /opt/tyk-dashboard/tyk-analytics --conf /conf/tyk-analytics.conf
     # command: [ "--conf", "/conf/tyk-analytics.conf" ]
 
