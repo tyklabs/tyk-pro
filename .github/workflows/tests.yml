@@ -119,10 +119,13 @@ jobs:
           cat versions.env
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
+      - name: DEBUG STEP 2
+        run: |
+          docker inspect tyk-analytics
+
       - name: Docker ps
         shell: bash
         run: docker ps
-  
 
       - name: Waiting for dashboard
         shell: bash
