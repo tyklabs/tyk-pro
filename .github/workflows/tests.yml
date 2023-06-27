@@ -103,6 +103,8 @@ jobs:
         run: |
             echo "-------CURRENT DIR--------"
             pwd
+            echo "-------RUNNER------------"
+            ls -R /home/runner/work/
 #           ls -R
 #           echo "-------GH WORKSPACE--------"
 #           ls -R ${{ github.workspace }}
