@@ -71,10 +71,16 @@ jobs:
 
       - uses: actions/checkout@v3
 
+      - name: Use github.workspace
+        run: echo This is the github.workspace: ${{ github.workspace }}
+
+      - name: Use GITHUB_WORKSPACE
+        run: echo This is the GITHUB_WORKSPACE: $GITHUB_WORKSPACE
+
       - name: env up
         working-directory: auto
         env:
-          confs_dir: $GITHUB_WORKSPACE/auto/pro
+          confs_dir: "$GITHUB_WORKSPACE/auto/pro"
           graphql_data: $GITHUB_WORKSPACE/compose/volumes/test/graphql-faker
           certs_dir: $GITHUB_WORKSPACE/compose/volumes/gw/certs
         run: |
@@ -84,7 +90,7 @@ jobs:
           echo "LS"
           ls
           echo "VARS"
-          ls $confs_dir
+          ls ${{ env.confs_dir }}
           ls $graphql_data
           ls $certs_dir
           echo "registry=${{ steps.ecr.outputs.registry }}
