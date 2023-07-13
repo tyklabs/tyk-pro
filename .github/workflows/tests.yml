@@ -55,47 +55,9 @@ permissions:
   contents: read    # This is required for actions/checkout
 
 jobs:
-  ecr-login:
-    name: ecr-passwd
-    runs-on: ubuntu-latest
-  
-    outputs:
-      aws-ecr-pass: ${{ steps.ecr-pass.outputs.ECR_PASS }}
-
-    steps:
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: arn:aws:iam::754489498669:role/ecr_rw_tyk
-          role-session-name: cipush
-          aws-region: eu-central-1
-
-      - name: Get ecr password
-        id: ecr-pass
-        run: |
-          echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
-      
-      - name: Create shared docker Volumes for DinD
-        run: |
-          docker volume create confs_volume
-          docker volume create gw_certs_volume
-          docker volume create graphql_volume
-
-
-
-# The job id corresponds to the environment type that the tests will run on
   pro:
     name: tyk-automated-tests on Tyk Pro
     runs-on: ubuntu-latest
-    needs: ecr-login
-    container:
-      image: 754489498669.dkr.ecr.eu-central-1.amazonaws.com/tyk-automated-tests:1.0.0-rc1
-      credentials:
-        username: AWS
-        password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
-      volumes:
-        - confs_volume:/confs
-        - gw_certs_volume:/certs
-        - graphql_volume:/graphql
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -104,22 +66,35 @@ jobs:
           role-session-name: cipush
           aws-region: eu-central-1
 
-      - id: ecr
-        uses: aws-actions/amazon-ecr-login@v1
+      - uses: aws-actions/amazon-ecr-login@v1
+        id: ecr
 
       - uses: actions/checkout@v3
-        
-      - name: Copy files to shared volumes
-        run: |
-          cp -r $GITHUB_WORKSPACE/auto/pro/* /confs
-          cp -r /app/ci/certs/* /certs
-          cp -r /app/ci/graphql-faker/* /graphql
 
       - name: env up
         working-directory: auto
-        # env:
-        #   confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
+        env:
+          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
         run: |
+          echo "registry=${{ steps.ecr.outputs.registry }}
+          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
+          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
+          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'v4.3.3' }}
+          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}" > versions.env
+          # bring up env
+          cat versions.env
+          docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
+
+      - name: env up
+        working-directory: auto
+        env:
+          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
+          graphql_data: /__w/tyk-pro/tyk-pro/compose/volumes/test/graphql-faker
+          certs_dir: /__w/tyk-pro/tyk-pro/compose/volumes/gw/certs
+        run: |
+          ls $confs_dir
+          ls $graphql_data
+          ls $certs_dir
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
@@ -132,11 +107,11 @@ jobs:
       - name: Docker ps
         if: ${{always()}}
         run: docker ps
-
+  
       - name: Docker Compose logs
         if: ${{failure()}}
         working-directory: auto
-        run: docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env logs
+        run: docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env logs          
 
       - name: Waiting for dashboard
         shell: bash
@@ -147,14 +122,12 @@ jobs:
             docker ps -a
             docker logs tyk-analytics
           done
-        timeout-minutes: 15
+        timeout-minutes: 15  
 
       - name: Run pytest
         working-directory: /app
         run: |
-          echo "Curl dashboard"
-          ls
           . $GITHUB_WORKSPACE/auto/test.env
           echo "this are env vars"
           env
-          pytest tests/gateway_api
+          docker run ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:1.0.0-rc1 pytest /app/tests/gateway_api

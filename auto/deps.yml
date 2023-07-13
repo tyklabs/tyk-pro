@@ -61,8 +61,7 @@ services:
     container_name: graphql-faker
     image: apisguru/graphql-faker:latest
     volumes:
-      - graphql_volume:/workdir/
-        # - ${graphql_data}:/workdir/faker-schema.graphql
+      - ${graphql_data}:/workdir/faker-schema.graphql
     command: "faker-schema.graphql"
     ports:
       - "9002:9002"
@@ -87,7 +86,3 @@ services:
             condition: service_healthy
         mongo:
             condition: service_healthy
-
-volumes:
-  graphql_volume:
-    external: true
