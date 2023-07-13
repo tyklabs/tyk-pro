@@ -111,14 +111,9 @@ jobs:
         
       - name: Copy files to shared volumes
         run: |
-          echo "LS /"
-          ls /
-          echo "LS -R"
-          ls -R /
-          exit 1
           cp -r ${{ github.workspace }}/auto/pro/* /confs
-          cp -r ${{ github.workspace }}/auto/pro/* /certs
-          cp -r ${{ github.workspace }}/auto/pro/* /graphql
+          cp -r /app/ci/certs/* /certs
+          cp -r /app/ci/graphql-faker/* /graphql
 
       - name: env up
         working-directory: auto
