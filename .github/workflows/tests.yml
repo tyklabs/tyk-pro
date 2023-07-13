@@ -107,7 +107,7 @@ jobs:
       - name: Waiting for dashboard
         shell: bash
         run: |
-          while [[ "$(curl -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
+          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
             sleep 30
             echo "waiting for dashboard '$(date +"%T")'"
             docker ps -a
