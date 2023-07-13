@@ -7,7 +7,7 @@ services:
       - tyk.env
     volumes:
       # - ${certs_dir}:/etc/ssl/certs
-      gw_certs_volume:/etc/ssl/certs/
+      - gw_certs_volume:/etc/ssl/certs/
       - confs_volume:/conf/
     ports:
       - "6000:6000"
