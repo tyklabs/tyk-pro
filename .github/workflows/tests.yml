@@ -121,10 +121,10 @@ jobs:
         #   confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
         run: |
           echo "registry=${{ steps.ecr.outputs.registry }}
-          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
-          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
-          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'master' }}
-          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }}" > versions.env
+          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
+          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
+          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'v4.3.3' }}
+          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}" > versions.env
           # bring up env
           cat versions.env
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
@@ -141,13 +141,13 @@ jobs:
       - name: Waiting for dashboard
         shell: bash
         run: |
-          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
-            sleep 60
+          while [[ "$(curl -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
+            sleep 30
             echo "waiting for dashboard '$(date +"%T")'"
             docker ps -a
             docker logs tyk-analytics
           done
-        timeout-minutes: 5
+        timeout-minutes: 15
 
       - name: Run pytest
         working-directory: /app
