@@ -59,3 +59,7 @@ services:
     - "9090:9090"
     env_file:
       - tyk-sink.env
+
+volumes:
+  myvolume:
+    external: true
