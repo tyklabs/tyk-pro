@@ -29,7 +29,7 @@ on:
       tat-tests:
         description: Run these tests from tyk-automated-tests to run, added to the pytest command line
         type: string
-        default: 'tests/dashboard_admin_api'
+        default: 'tests/gateway_api'
       tyk-version:
         description: ECR docker tag to use
         type: string
