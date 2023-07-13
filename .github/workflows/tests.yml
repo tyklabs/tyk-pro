@@ -103,7 +103,7 @@ jobs:
       - uses: actions/checkout@v3
         
       - name: Copy files to volume
-        run: cp -r /__w/tyk-pro/tyk-pro/auto/pro /workspace
+        run: cp -r /__w/tyk-pro/tyk-pro/auto/pro/* /workspace
 
       - name: DEBUG STEP
         run: |
