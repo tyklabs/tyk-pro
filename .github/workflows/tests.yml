@@ -124,7 +124,7 @@ jobs:
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
           tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'master' }}
-          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }} > versions.env
+          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }}" > versions.env
           # bring up env
           cat versions.env
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
