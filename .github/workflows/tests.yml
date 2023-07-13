@@ -82,19 +82,10 @@ jobs:
       - name: env up
         working-directory: auto
         env:
-          confs_dir: "$GITHUB_WORKSPACE/auto/pro"
-          graphql_data: $GITHUB_WORKSPACE/compose/volumes/test/graphql-faker
-          certs_dir: $GITHUB_WORKSPACE/compose/volumes/gw/certs
+          confs_dir: "${{ github.workspace }}/auto/pro"
+          graphql_data: "${{ github.workspace }}/compose/volumes/test/graphql-faker"
+          certs_dir: "${{ github.workspace }}/compose/volumes/gw/certs"
         run: |
-          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
-          echo "PWD"
-          pwd
-          echo "LS"
-          ls
-          echo "VARS"
-          ls ${{ env.confs_dir }}
-          ls $graphql_data
-          ls $certs_dir
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
