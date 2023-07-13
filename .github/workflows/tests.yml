@@ -152,7 +152,7 @@ jobs:
       - name: Run pytest
         working-directory: /app
         run: |
-          cat pytest_ci.ini
+          ls
           echo "This is home: $GITHUB_WORKSPACE"
           . $GITHUB_WORKSPACE/auto/test.env
-          pytest -c pytest_ci.ini ${{ inputs.tat-tests }}
+          pytest ${{ inputs.tat-tests }}
