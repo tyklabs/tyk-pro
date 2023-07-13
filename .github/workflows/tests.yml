@@ -130,6 +130,7 @@ jobs:
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
       - name: Docker ps
+        if: ${{failure()}}
         run: docker ps
 
       - name: Docker Compose logs

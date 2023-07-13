@@ -62,7 +62,7 @@ services:
     depends_on:
       - tyk
     healthcheck:
-      test: curl -s --fail http://tyk:8080/hello | grep -o '.*status":"pass".*dashboard":{"status":"pass".*redis":{"status":"pass"'
+      test: curl -s -k --fail https://tyk:8080/hello | grep -o '.*status":"pass".*dashboard":{"status":"pass".*redis":{"status":"pass"'
       interval: 5s
       retries: 10
       start_period: 4s
