@@ -75,20 +75,6 @@ jobs:
         working-directory: auto
         env:
           confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
-        run: |
-          echo "registry=${{ steps.ecr.outputs.registry }}
-          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
-          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
-          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'v4.3.3' }}
-          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}" > versions.env
-          # bring up env
-          cat versions.env
-          docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
-
-      - name: env up
-        working-directory: auto
-        env:
-          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
           graphql_data: /__w/tyk-pro/tyk-pro/compose/volumes/test/graphql-faker
           certs_dir: /__w/tyk-pro/tyk-pro/compose/volumes/gw/certs
         run: |
