@@ -72,10 +72,12 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Use github.workspace
-        run: echo This is the github.workspace: ${{ github.workspace }}
+        run: |
+          echo "This is the github.workspace: ${{ github.workspace }}"
 
       - name: Use GITHUB_WORKSPACE
-        run: echo This is the GITHUB_WORKSPACE: $GITHUB_WORKSPACE
+        run: |
+          echo "This is the GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
 
       - name: env up
         working-directory: auto
