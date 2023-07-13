@@ -73,6 +73,9 @@ jobs:
         id: ecr-pass
         run: |
           echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
+      
+      - name: Create docker Volume
+        run: docker volume create myvolume
 
 # The job id corresponds to the environment type that the tests will run on
   pro:
@@ -84,8 +87,8 @@ jobs:
       credentials:
         username: AWS
         password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
-# volumes:
-#   - {{ github.workspace }}:/workspace
+      volumes:
+        - myvolume:/workspace
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -98,13 +101,16 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - uses: actions/checkout@v3
+        
+      - name: Copy files to volume
+        run: cp -r /__w/tyk-pro/tyk-pro/auto/pro /workspace
 
       - name: DEBUG STEP
         run: |
             echo "-------CURRENT DIR--------"
             pwd
-            echo "-------RUNNER------------"
-            ls -R /home/runner/work/
+#            echo "-------RUNNER------------"
+#            ls -R /home/runner/work/
 #           ls -R
 #           echo "-------GH WORKSPACE--------"
 #           ls -R ${{ github.workspace }}
@@ -112,7 +118,6 @@ jobs:
 #           cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
 #           ls /workspace/auto/pro
 #           cat /workspace/auto/pro/tyk-analytics.conf
-
 
       - name: env up
         working-directory: auto
