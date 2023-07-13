@@ -116,9 +116,9 @@ jobs:
         timeout-minutes: 15  
 
       - name: Run pytest
-        working-directory: /app
+        working-directory: auto
         run: |
-          . $GITHUB_WORKSPACE/auto/test.env
+          . test.env
           echo "this are env vars"
           env
-          docker run ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:1.0.0-rc1 pytest /app/tests/gateway_api
+          docker run ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:1.0.0-rc1 tests/gateway_api
