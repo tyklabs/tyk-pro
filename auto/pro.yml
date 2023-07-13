@@ -48,13 +48,31 @@ services:
       - tyk-pump.env
     command: [ "--conf", "/conf/tyk-pump.conf" ]
 
-  tyk-sink:
-    container_name: tyk-sink
-    image: ${tyk_sink_image}
-    ports:
-    - "9090:9090"
-    env_file:
-      - tyk-sink.env
+  # tyk-sink:
+  #   container_name: tyk-sink
+  #   image: ${tyk_sink_image}
+  #   ports:
+  #   - "9090:9090"
+  #   env_file:
+  #     - tyk-sink.env
+
+  gateway-checker:
+    image: curlimages/curl
+    command: tail -f /dev/null
+    depends_on:
+      - tyk
+    healthcheck:
+      test: curl -s --fail http://tyk:8080/hello | grep -o '.*status":"pass".*dashboard":{"status":"pass".*redis":{"status":"pass"'
+      interval: 5s
+      retries: 10
+      start_period: 4s
+      timeout: 10s
+
+  wait:
+    image: hello-world:linux
+    depends_on:
+        gateway-checker:
+            condition: service_healthy
 
 volumes:
   confs_volume:

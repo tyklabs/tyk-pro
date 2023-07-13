@@ -133,16 +133,21 @@ jobs:
         shell: bash
         run: docker ps
 
-      - name: Waiting for dashboard
+      - name: Docker Compose logs
+        if: ${{failure()}}
         shell: bash
-        run: |
-          while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
-            sleep 30
-            echo "waiting for dashboard '$(date +"%T")'"
-            docker ps -a
-            docker logs tyk-analytics
-          done
-        timeout-minutes: 2
+        run: docker compose logs
+
+      # - name: Waiting for dashboard
+      #   shell: bash
+      #   run: |
+      #     while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
+      #       sleep 60
+      #       echo "waiting for dashboard '$(date +"%T")'"
+      #       docker ps -a
+      #       docker logs tyk-analytics
+      #     done
+      #   timeout-minutes: 5
 
       - name: Run pytest
         working-directory: /app
