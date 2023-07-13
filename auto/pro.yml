@@ -8,7 +8,7 @@ services:
     volumes:
       # - ${certs_dir}:/etc/ssl/certs
       gw_certs_volume:/etc/ssl/certs/
-      - shared_volume:/conf/
+      - confs_volume:/conf/
     ports:
       - "6000:6000"
       - "8003:8003"
@@ -24,7 +24,7 @@ services:
     container_name: tyk-analytics
     image: ${tyk_analytics_image}
     volumes:
-      - shared_volume:/conf/
+      - confs_volume:/conf/
     ports:
       - "3000:3000"
       - "5000:5000"
@@ -38,7 +38,7 @@ services:
     container_name: tyk-pump
     image: ${tyk_pump_image}
     volumes:
-      - shared_volume:/conf
+      - confs_volume:/conf
     ports:    
       - "8061:8061"
     env_file:
@@ -54,7 +54,7 @@ services:
       - tyk-sink.env
 
 volumes:
-  shared_volume:
+  confs_volume:
     external: true
   gw_certs_volume:
     external: true
