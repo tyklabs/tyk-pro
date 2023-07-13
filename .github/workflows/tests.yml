@@ -111,7 +111,7 @@ jobs:
         
       - name: Copy files to shared volumes
         run: |
-          cp -r ${{ github.workspace }}/auto/pro/* /confs
+          cp -r $GITHUB_WORKSPACE/auto/pro/* /confs
           cp -r /app/ci/certs/* /certs
           cp -r /app/ci/graphql-faker/* /graphql
 
