@@ -130,7 +130,7 @@ jobs:
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
 
       - name: Docker ps
-        if: ${{failure()}}
+        if: ${{always()}}
         run: docker ps
 
       - name: Docker Compose logs
@@ -154,4 +154,4 @@ jobs:
         run: |
           echo "This is home: $GITHUB_WORKSPACE"
           . $GITHUB_WORKSPACE/auto/test.env
-          pytest ${{ inputs.tat-tests }}
+          pytest -c pytest_ci.ini ${{ inputs.tat-tests }}
