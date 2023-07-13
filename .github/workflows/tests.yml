@@ -74,10 +74,16 @@ jobs:
       - name: env up
         working-directory: auto
         env:
-          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
-          graphql_data: /__w/tyk-pro/tyk-pro/compose/volumes/test/graphql-faker
-          certs_dir: /__w/tyk-pro/tyk-pro/compose/volumes/gw/certs
+          confs_dir: $GITHUB_WORKSPACE/auto/pro
+          graphql_data: $GITHUB_WORKSPACE/compose/volumes/test/graphql-faker
+          certs_dir: $GITHUB_WORKSPACE/compose/volumes/gw/certs
         run: |
+          echo "GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
+          echo "PWD"
+          pwd
+          echo "LS"
+          ls
+          echo "VARS"
           ls $confs_dir
           ls $graphql_data
           ls $certs_dir
