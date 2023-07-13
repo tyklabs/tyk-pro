@@ -6,8 +6,9 @@ services:
     env_file:
       - tyk.env
     volumes:
-      - ${certs_dir}:/etc/ssl/certs
-      - myvolume:/conf/
+      # - ${certs_dir}:/etc/ssl/certs
+      gw_certs_volume:/etc/ssl/certs/
+      - shared_volume:/conf/
     ports:
       - "6000:6000"
       - "8003:8003"
@@ -23,29 +24,21 @@ services:
     container_name: tyk-analytics
     image: ${tyk_analytics_image}
     volumes:
-      - myvolume:/conf/
+      - shared_volume:/conf/
     ports:
       - "3000:3000"
       - "5000:5000"
       - "1026:1025"
     env_file:
       - tyk-analytics.env
-    entrypoint: ["/bin/bash"]
-    command:
-      - "-c"
-      - |
-        echo "HERE COMES THE CONF"
-        ls -R /conf
-        echo "HERE ENDS THE CONF"
-        /opt/tyk-dashboard/tyk-analytics --conf /conf/tyk-analytics.conf
-    # command: [ "--conf", "/conf/tyk-analytics.conf" ]
+    command: [ "--conf", "/conf/tyk-analytics.conf" ]
 
 
   tyk-pump:
     container_name: tyk-pump
     image: ${tyk_pump_image}
     volumes:
-      - myvolume:/conf
+      - shared_volume:/conf
     ports:    
       - "8061:8061"
     env_file:
@@ -61,5 +54,7 @@ services:
       - tyk-sink.env
 
 volumes:
-  myvolume:
+  shared_volume:
+    external: true
+  gw_certs_volume:
     external: true

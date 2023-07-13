@@ -74,8 +74,13 @@ jobs:
         run: |
           echo "ECR_PASS=$(aws ecr get-login-password --region eu-central-1)" >> "$GITHUB_OUTPUT"
       
-      - name: Create docker Volume
-        run: docker volume create myvolume
+      - name: Create shared docker Volumes for DinD
+        run: |
+          docker volume create confs_volume
+          docker volume create gw_certs_volume
+          docker volume create graphql_volume
+
+
 
 # The job id corresponds to the environment type that the tests will run on
   pro:
@@ -88,7 +93,9 @@ jobs:
         username: AWS
         password: ${{ needs.ecr-login.outputs.aws-ecr-pass }}
       volumes:
-        - myvolume:/workspace
+        - confs_volume:/confs
+        - gw_certs_volume:/certs
+        - graphql_volume:/graphql
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -102,46 +109,32 @@ jobs:
 
       - uses: actions/checkout@v3
         
-      - name: Copy files to volume
-        run: cp -r /__w/tyk-pro/tyk-pro/auto/pro/* /workspace
-
-      - name: DEBUG STEP
+      - name: Copy files to shared volumes
         run: |
-            echo "-------CURRENT DIR--------"
-            pwd
-#            echo "-------RUNNER------------"
-#            ls -R /home/runner/work/
-#           ls -R
-#           echo "-------GH WORKSPACE--------"
-#           ls -R ${{ github.workspace }}
-#           exit 1
-#           cat ${{ github.workspace }}/auto/${{ github.job }}/tyk-analytics.conf
-#           ls /workspace/auto/pro
-#           cat /workspace/auto/pro/tyk-analytics.conf
+          echo "PWD"
+          pwd
+          echo "LS"
+          ls
+          echo "LS -R"
+          ls -R
+          exit 1
+          cp -r ${{ github.workspace }}/auto/pro/* /confs
+          cp -r ${{ github.workspace }}/auto/pro/* /certs
+          cp -r ${{ github.workspace }}/auto/pro/* /graphql
 
       - name: env up
         working-directory: auto
-        env:
-          confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
+        # env:
+        #   confs_dir: /__w/tyk-pro/tyk-pro/auto/pro
         run: |
-          echo "CONFIG DIR: $confs_dir"
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'master' }}
           tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'master' }}
           tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'master' }}
-          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }}
-          confs_dir=/__w/tyk-pro/tyk-pro/auto/pro" > versions.env
+          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'master' }} > versions.env
           # bring up env
           cat versions.env
           docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
-
-      - name: DEBUG STEP 2
-        run: |
-          docker inspect tyk-analytics
-
-      - name: DEBUG STEP 3
-        run: |
-          ls /__w/tyk-pro/tyk-pro/auto/pro   
 
       - name: Docker ps
         shell: bash
@@ -151,7 +144,7 @@ jobs:
         shell: bash
         run: |
           while [[ "$(curl -s -o /dev/null -w ''%{http_code}'' localhost:3000/hello/)" != "200" ]];do
-            sleep 60
+            sleep 30
             echo "waiting for dashboard '$(date +"%T")'"
             docker ps -a
             docker logs tyk-analytics

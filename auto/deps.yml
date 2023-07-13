@@ -61,7 +61,8 @@ services:
     container_name: graphql-faker
     image: apisguru/graphql-faker:latest
     volumes:
-        - ${graphql_data}:/workdir/faker-schema.graphql
+      - graphql_volume:/workdir/faker-schema.graphql
+        # - ${graphql_data}:/workdir/faker-schema.graphql
     command: "faker-schema.graphql"
     ports:
       - "9002:9002"
@@ -79,3 +80,6 @@ services:
     container_name: trevorblades
     image: mangomm/trevorblades-countries
 
+volumes:
+  graphql_volume:
+    external: true
