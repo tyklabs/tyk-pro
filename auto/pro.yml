@@ -8,6 +8,7 @@ services:
     volumes:
       # - ${certs_dir}:/etc/ssl/certs
       - gw_certs_volume:/etc/ssl/certs/
+      # - ${confs_dir}:/conf/
       - confs_volume:/conf/
     ports:
       - "6000:6000"
@@ -24,6 +25,7 @@ services:
     container_name: tyk-analytics
     image: ${tyk_analytics_image}
     volumes:
+    # - ${confs_dir}:/conf/
       - confs_volume:/conf/
     ports:
       - "3000:3000"
@@ -38,6 +40,7 @@ services:
     container_name: tyk-pump
     image: ${tyk_pump_image}
     volumes:
+    # - ${confs_dir}:/conf/
       - confs_volume:/conf
     ports:    
       - "8061:8061"
