@@ -121,4 +121,4 @@ jobs:
           . test.env
           echo "this are env vars"
           env
-          docker run ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:1.0.0-rc2 tests/gateway_api
+          docker run ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc2 tests/gateway_api
