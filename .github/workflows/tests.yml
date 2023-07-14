@@ -120,4 +120,4 @@ jobs:
       - name: Run pytest
         working-directory: auto
         run: |
-          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m not local and not mdcb
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m "not local and not mdcb"
