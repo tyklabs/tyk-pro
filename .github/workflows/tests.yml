@@ -97,7 +97,9 @@ jobs:
 
       - name: Docker ps
         if: ${{always()}}
-        run: docker ps
+        run: |
+          docker ps
+          docker network ls
   
       - name: Docker Compose logs
         if: ${{failure()}}
@@ -121,4 +123,4 @@ jobs:
           . test.env
           echo "this are env vars"
           env
-          docker run --env-file test.env ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m gw
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m gw
