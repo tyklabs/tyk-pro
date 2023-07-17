@@ -72,8 +72,8 @@ jobs:
           tyk_image: "tyk:${{ inputs.tyk-version || 'v4.3.4' }}"
           tyk_analytics_image: "tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}"
           tyk_pump_image: "tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}"
-        run: docker compose -f ${{ github.job }}.yml -f deps.yml --exit-code-from any up --quiet-pull
-  
+        run: docker compose -f ${{ github.job }}.yml -f deps.yml up --exit-code-from any --quiet-pull
+        
       - name: Docker debug in case of failure
         if: ${{failure()}}
         working-directory: auto
