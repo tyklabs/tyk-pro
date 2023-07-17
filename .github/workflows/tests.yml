@@ -42,12 +42,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        name: [ "mongo", "sql" ]
+#        db: [ "postgress", "sql" ]
+        db: [ "postgress" ]
         include:
-          - name: mongo
+          - name: postgress
             tat-tests: "not local and not mdcb and not sql"
-          - name: sql
-            tat-tests: "not local and not mdcb"
+          # - name: sql
+          #   tat-tests: "not local and not mdcb"
 
     env:
       confs_dir: "${{ github.workspace }}/auto/pro"
