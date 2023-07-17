@@ -8,10 +8,10 @@ on:
         description: Version tag of the tyk-automated-tests image to run
         type: string
         default: 'v1.0.0-rc3'
-      tat-tests:
-        description: Run these tests from tyk-automated-tests to run, added to the pytest command line
-        type: string
-        default: 'not local and not mdcb'
+      # tat-tests:
+      #   description: Run these tests from tyk-automated-tests to run, added to the pytest command line
+      #   type: string
+      #   default: 'not local and not mdcb'
       tyk-version:
         description: ECR docker tag to use
         type: string
@@ -39,6 +39,11 @@ jobs:
   pro:
     name: tyk-automated-tests on Tyk Pro
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        tat-tests: [ "not local and not mdcb", "not local and not mdcb" ]
+
     env:
       confs_dir: "${{ github.workspace }}/auto/pro"
       graphql_data: "${{ github.workspace }}/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
@@ -102,4 +107,5 @@ jobs:
       - name: Run pytest
         working-directory: auto
         run: |
-          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:${{ inputs.tat-version || 'v1.0.0-rc3'}} pytest -m "${{ inputs.tat-tests || 'not local and not mdcb' }}"
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:${{ inputs.tat-version || 'v1.0.0-rc3'}} pytest -m "${{ matrix.tat-tests }}"
+#         docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:${{ inputs.tat-version || 'v1.0.0-rc3'}} pytest -m "${{ inputs.tat-tests || 'not local and not mdcb' }}"
