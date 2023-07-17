@@ -71,9 +71,9 @@ services:
       - tyk-analytics
     healthcheck:
       test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' tyk-dashboard:3000/hello/ | grep -q '^200$'"]
-      interval: 5s
-      retries: 10
-      start_period: 4s
+      interval: 10s
+      retries: 30
+      start_period: 10s
       timeout: 10s
 
   wait:
