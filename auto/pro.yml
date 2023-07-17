@@ -2,7 +2,7 @@ version: "3.9"
 services:
   tyk:
     container_name: tyk
-    image: ${registry}:${tyk_image}
+    image: ${registry}/${tyk_image}
     env_file:
       - tyk.env
     volumes:
@@ -21,7 +21,7 @@ services:
 
   tyk-analytics:
     container_name: tyk-analytics
-    image: ${registry}:${tyk_analytics_image}
+    image: ${registry}/${tyk_analytics_image}
     volumes:
       - ${confs_dir}:/conf/
     ports:
@@ -35,7 +35,7 @@ services:
 
   tyk-pump:
     container_name: tyk-pump
-    image: ${registry}:${tyk_pump_image}
+    image: ${registry}/${tyk_pump_image}
     volumes:
       - ${confs_dir}:/conf/
     ports:    
