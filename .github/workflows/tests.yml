@@ -120,4 +120,14 @@ jobs:
       - name: Run pytest
         working-directory: auto
         run: |
-          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m "not local and not mdcb"
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest tests/graphql/graphql_test.py
+
+      - name: Docker Compose logs gateway
+        if: ${{failure()}}
+        working-directory: auto
+        run: docker logs tyk
+
+      - name: Docker Compose logs dash
+        if: ${{failure()}}
+        working-directory: auto
+        run: docker logs tyk-analytics
