@@ -39,6 +39,14 @@ jobs:
   pro:
     name: tyk-automated-tests on Tyk Pro
     runs-on: ubuntu-latest
+    env:
+      confs_dir: "${{ github.workspace }}/auto/pro"
+      graphql_data: "${{ github.workspace }}/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
+      certs_dir: "${{ github.workspace }}/tyk-automated-tests/ci/certs"
+      tyk_sink_image: "tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}"
+      tyk_image: "tyk:${{ inputs.tyk-version || 'v4.3.4' }}"
+      tyk_analytics_image: "tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}"
+      tyk_pump_image: "tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}"
 
     steps:
       - uses: aws-actions/configure-aws-credentials@v2
@@ -64,14 +72,7 @@ jobs:
         working-directory: auto
         shell: bash
         env:
-          confs_dir: "${{ github.workspace }}/auto/pro"
-          graphql_data: "${{ github.workspace }}/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
-          certs_dir: "${{ github.workspace }}/tyk-automated-tests/ci/certs"
           registry: "${{ steps.ecr.outputs.registry }}"
-          tyk_sink_image: "tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}"
-          tyk_image: "tyk:${{ inputs.tyk-version || 'v4.3.4' }}"
-          tyk_analytics_image: "tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}"
-          tyk_pump_image: "tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}"
         run: docker compose -f ${{ github.job }}.yml -f deps.yml up -d --quiet-pull
 
       - name: Check containers exit codes
@@ -88,13 +89,15 @@ jobs:
 
       - name: Docker debug in case of failure
         if: ${{failure()}}
+        shell: bash
+        env:
+          registry: "${{ steps.ecr.outputs.registry }}"
         working-directory: auto
         run: |
           echo "---- DOCKER PS ----"
           docker ps -a
           echo "---- DOCKER LOGS ----"
-          docker compose -f ${{ github.job }}.yml -f deps.yml logs          
-
+          docker compose -f ${{ github.job }}.yml -f deps.yml logs
 
       - name: Run pytest
         working-directory: auto
