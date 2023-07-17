@@ -83,7 +83,7 @@ jobs:
         working-directory: auto
         env:
           confs_dir: "${{ github.workspace }}/auto/pro"
-          graphql_data: "${{ github.workspace }}/compose/volumes/test/graphql-faker"
+          graphql_data: "${{ github.workspace }}/compose/volumes/test/graphql-faker/faker-schema.graphql"
           certs_dir: "${{ github.workspace }}/compose/volumes/gw/certs"
         run: |
           echo "registry=${{ steps.ecr.outputs.registry }}
