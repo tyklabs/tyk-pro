@@ -29,31 +29,7 @@ on:
         type: string
         default: master
   workflow_call:
-    inputs:
-      tat-version:
-        description: Version tag of the tyk-automated-tests image to run
-        type: string
-        default: 'v1.0.0-rc3'
-      tat-tests:
-        description: Run these tests from tyk-automated-tests to run, added to the pytest command line
-        type: string
-        default: 'not local and not mdcb'
-      tyk-version:
-        description: ECR docker tag to use
-        type: string
-        default: master
-      tyk-analytics-version:
-        description: ECR docker tag to use
-        type: string
-        default: master
-      tyk-pump-version:
-        description: ECR docker tag to use
-        type: string
-        default: master
-      tyk-sink-version:
-        description: ECR docker tag to use
-        type: string
-        default: master
+    inputs: {}
 
 permissions:
   id-token: write   # This is required for requesting the JWT
