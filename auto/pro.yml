@@ -64,8 +64,22 @@ services:
       start_period: 4s
       timeout: 10s
 
+  dashboard-checker:
+    image: curlimages/curl
+    command: tail -f /dev/null
+    depends_on:
+      - tyk-analytics
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' tyk-dashboard:3000/hello/ | grep -q '^200$'"]
+      interval: 5s
+      retries: 10
+      start_period: 4s
+      timeout: 10s
+
   wait:
     image: hello-world:linux
     depends_on:
         gateway-checker:
             condition: service_healthy
+        dashboard-checker:
+            condition: service_healthy 
