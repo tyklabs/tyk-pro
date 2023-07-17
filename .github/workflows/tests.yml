@@ -127,7 +127,17 @@ jobs:
         working-directory: auto
         run: docker logs tyk
 
+      - name: Docker Compose logs graphql-faker
+        if: ${{failure()}}
+        working-directory: auto
+        run: docker logs graphql-faker
+        
       - name: Docker Compose logs dash
         if: ${{failure()}}
         working-directory: auto
         run: docker logs tyk-analytics
+
+      - name: Curl to graphql
+        shell: bash
+        run: |
+          curl http://graphql-faker:9002/graphql
