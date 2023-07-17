@@ -4,10 +4,14 @@ on:
   pull_request:
   workflow_dispatch:
     inputs:
+      tat-version:
+        description: Version tag of the tyk-automated-tests image to run
+        type: string
+        default: 'v1.0.0-rc3'
       tat-tests:
         description: Run these tests from tyk-automated-tests to run, added to the pytest command line
         type: string
-        default: 'tests/gateway_api'
+        default: 'not local and not mdcb'
       tyk-version:
         description: ECR docker tag to use
         type: string
@@ -26,10 +30,14 @@ on:
         default: master
   workflow_call:
     inputs:
+      tat-version:
+        description: Version tag of the tyk-automated-tests image to run
+        type: string
+        default: 'v1.0.0-rc3'
       tat-tests:
         description: Run these tests from tyk-automated-tests to run, added to the pytest command line
         type: string
-        default: 'tests/gateway_api'
+        default: 'not local and not mdcb'
       tyk-version:
         description: ECR docker tag to use
         type: string
@@ -46,9 +54,6 @@ on:
         description: ECR docker tag to use
         type: string
         default: master
-
-env:
-  GOPRIVATE: github.com/TykTechnologies
 
 permissions:
   id-token: write   # This is required for requesting the JWT
@@ -76,17 +81,8 @@ jobs:
         with:
           repository: TykTechnologies/tyk-automated-tests
           path: tyk-automated-tests
-          ref: refs/tags/v1.0.0-rc3
+          ref: refs/tags/${{ inputs.tat-version || 'v1.0.0-rc3'}}
           token: ${{ secrets.ORG_GH_TOKEN }}
-
-
-      - name: Use github.workspace
-        run: |
-          echo "This is the github.workspace: ${{ github.workspace }}"
-
-      - name: Use GITHUB_WORKSPACE
-        run: |
-          echo "This is the GITHUB_WORKSPACE: $GITHUB_WORKSPACE"
 
       - name: env up
         working-directory: auto
@@ -94,15 +90,12 @@ jobs:
           confs_dir: "${{ github.workspace }}/auto/pro"
           graphql_data: "${{ github.workspace }}/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
           certs_dir: "${{ github.workspace }}/tyk-automated-tests/ci/certs"
-        run: |
-          echo "registry=${{ steps.ecr.outputs.registry }}
-          tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
-          tyk_image=\${registry}/tyk:${{ inputs.tyk-version || 'v4.3.4' }}
-          tyk_analytics_image=\${registry}/tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}
-          tyk_pump_image=\${registry}/tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}" > versions.env
-          # bring up env
-          cat versions.env
-          docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env up --quiet-pull -d
+          registry: "${{ steps.ecr.outputs.registry }}"
+          tyk_sink_image: "tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}"
+          tyk_image: "tyk:${{ inputs.tyk-version || 'v4.3.4' }}"
+          tyk_analytics_image: "tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}"
+          tyk_pump_image: "tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}"
+        run: docker compose -f ${{ github.job }}.yml -f deps.yml up --quiet-pull -d
 
       - name: Docker ps
         if: ${{always()}}
@@ -113,7 +106,7 @@ jobs:
       - name: Docker Compose logs
         if: ${{failure()}}
         working-directory: auto
-        run: docker compose -f ${{ github.job }}.yml -f deps.yml --env-file versions.env --env-file tat.env logs          
+        run: docker compose -f ${{ github.job }}.yml -f deps.yml logs          
 
       - name: Waiting for dashboard
         shell: bash
@@ -129,4 +122,4 @@ jobs:
       - name: Run pytest
         working-directory: auto
         run: |
-          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m "not local and not mdcb"
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:${{ inputs.tat-version || 'v1.0.0-rc3'}} pytest -m "${{ inputs.tat-tests || 'not local and not mdcb' }}"
