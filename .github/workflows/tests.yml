@@ -72,7 +72,19 @@ jobs:
           tyk_image: "tyk:${{ inputs.tyk-version || 'v4.3.4' }}"
           tyk_analytics_image: "tyk-analytics:${{ inputs.tyk-analytics-version || 'working-master' }}"
           tyk_pump_image: "tyk-pump:${{ inputs.tyk-pump-version || 'v1.7.0' }}"
-        run: docker compose -f ${{ github.job }}.yml -f deps.yml up --quiet-pull
+        run: docker compose -f ${{ github.job }}.yml -f deps.yml up -d --quiet-pull
+
+      - name: Check containers exit codes
+        shell: bash
+        run: |
+          container_ids=$(docker ps -q)
+          for container_id in $container_ids; do
+            container_exit_code=$(docker inspect -f '{{.State.ExitCode}}' "$container_id")
+            if [ "$container_exit_code" -ne 0 ]; then
+              exit_code=1
+            fi
+          done
+          exit $exit_code
 
       - name: Docker debug in case of failure
         if: ${{failure()}}
