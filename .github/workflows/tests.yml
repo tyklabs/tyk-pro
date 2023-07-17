@@ -71,6 +71,13 @@ jobs:
 
       - uses: actions/checkout@v3
 
+      - name: Checkout tools repo
+        uses: actions/checkout@v3
+        with:
+          repository: TykTechnologies/tyk-automated-tests
+          path: /tyk-automated-tests
+          ref: 'refs/tags/v1.0.0-rc3'
+
       - name: Use github.workspace
         run: |
           echo "This is the github.workspace: ${{ github.workspace }}"
@@ -83,8 +90,8 @@ jobs:
         working-directory: auto
         env:
           confs_dir: "${{ github.workspace }}/auto/pro"
-          graphql_data: "${{ github.workspace }}/compose/volumes/test/graphql-faker/faker-schema.graphql"
-          certs_dir: "${{ github.workspace }}/compose/volumes/gw/certs"
+          graphql_data: "/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
+          certs_dir: "/tyk-automated-tests/ci/certs"
         run: |
           echo "registry=${{ steps.ecr.outputs.registry }}
           tyk_sink_image=\${registry}/tyk-sink:${{ inputs.tyk-sink-version || 'v2.1.1' }}
@@ -120,24 +127,4 @@ jobs:
       - name: Run pytest
         working-directory: auto
         run: |
-          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest tests/graphql/graphql_test.py
-
-      - name: Docker Compose logs gateway
-        if: ${{failure()}}
-        working-directory: auto
-        run: docker logs tyk
-
-      - name: Docker Compose logs graphql-faker
-        if: ${{failure()}}
-        working-directory: auto
-        run: docker logs graphql-faker
-        
-      - name: Docker Compose logs dash
-        if: ${{failure()}}
-        working-directory: auto
-        run: docker logs tyk-analytics
-
-      - name: Curl to graphql
-        shell: bash
-        run: |
-          curl http://graphql-faker:9002/graphql
+          docker run --env-file test.env --network auto_default ${{ steps.ecr.outputs.registry }}/tyk-automated-tests:v1.0.0-rc3 pytest -m "not local and not mdcb"
