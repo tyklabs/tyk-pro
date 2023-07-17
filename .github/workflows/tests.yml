@@ -3,6 +3,7 @@ name: Integration tests
 on:
   pull_request:
   workflow_dispatch:
+  workflow_call:
     inputs:
       tat-version:
         description: Version tag of the tyk-automated-tests image to run
@@ -28,8 +29,6 @@ on:
         description: ECR docker tag to use
         type: string
         default: master
-  workflow_call:
-    inputs: {}
 
 permissions:
   id-token: write   # This is required for requesting the JWT
