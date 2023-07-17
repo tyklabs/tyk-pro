@@ -86,6 +86,7 @@ jobs:
 
       - name: env up
         working-directory: auto
+        shell: bash
         env:
           confs_dir: "${{ github.workspace }}/auto/pro"
           graphql_data: "${{ github.workspace }}/tyk-automated-tests/ci/graphql-faker/faker-schema.graphql"
