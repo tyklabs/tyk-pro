@@ -42,7 +42,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tat-tests: [ "not local and not mdcb", "not local and not mdcb" ]
+        name: [ "mongo", "sql" ]
+        include:
+          - name: mongo
+            tat-tests: "not local and not mdcb and not sql"
+          - name: sql
+            tat-tests: "not local and not mdcb"
 
     env:
       confs_dir: "${{ github.workspace }}/auto/pro"
