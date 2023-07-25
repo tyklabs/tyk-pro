@@ -76,6 +76,7 @@ jobs:
           repository: TykTechnologies/tyk-automated-tests
           path: tyk-automated-tests
           ref: refs/tags/${{ inputs.tat-version || 'v1.0.0-rc3'}}
+          token: ${{ secrets.ORG_GH_TOKEN }}
 
       - name: env up
         working-directory: auto
