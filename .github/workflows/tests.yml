@@ -29,6 +29,9 @@ on:
         description: ECR docker tag to use
         type: string
         default: master
+    secrets:
+      ORG_GH_TOKEN:
+        required: true
 
 permissions:
   id-token: write   # This is required for requesting the JWT
