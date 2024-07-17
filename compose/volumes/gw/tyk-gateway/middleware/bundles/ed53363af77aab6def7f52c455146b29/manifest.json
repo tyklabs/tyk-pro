@@ -1,1 +1,0 @@
-{"file_list":["testmw.js"],"custom_middleware":{"pre":null,"post":null,"post_key_auth":null,"auth_check":{"name":"ottoAuthExample","path":"testmw.js","require_session":false},"response":null,"driver":"otto","id_extractor":{"extract_from":"","extract_with":"","extractor_config":null}},"checksum":"65694908d609b14df0e280c1a95a8ca4","signature":""}

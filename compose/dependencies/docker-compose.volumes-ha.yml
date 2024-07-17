@@ -1,8 +1,0 @@
-version: "3.9"
-services:
-  redis-datacenter-1:
-    volumes:
-      - ${VOLUME_FOLDER}/redis/certs:/opt/bitnami/redis/certs
-  redis-datacenter-2:
-    volumes:
-      - ${VOLUME_FOLDER}/redis/certs:/opt/bitnami/redis/certs
