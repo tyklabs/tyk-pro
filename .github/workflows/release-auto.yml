@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - name: AUTO env
-        run: tar czf auto-env.tgz .
+        run: tar czf auto-env.tgz . --exclude auto-env.tgz
       - uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.ORG_GH_TOKEN }}
