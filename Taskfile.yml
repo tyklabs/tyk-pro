@@ -28,10 +28,10 @@ tasks:
         git checkout -f confs/${VARIATION}.env
         cat "confs/${VARIATION}.env" "${env_file}" | sort -u > tmp.env
         mv tmp.env ${env_file}
-        docker compose -p auto -f ${FLAVOUR}.yml -f deps_${FLAVOUR}.yml -f ${DB}.yml -f ${CACHE}.yml --env-file master.env --profile master-datacenter up --quiet-pull -d
+        docker compose -p auto -f ${FLAVOUR}.yml -f deps_${FLAVOUR}.yml -f ${DB}.yml -f ${CACHE}.yml --env-file master.env --profile master-datacenter up --quiet-pull -d --build
         if [[ "${FLAVOUR}" == "pro-ha" ]];then
           task bootstrap
-          docker compose -p auto -f pro-ha.yml -f deps_pro-ha.yml -f ${DB}.yml -f ${CACHE}.yml --env-file master.env --profile slave-datacenter up --quiet-pull -d
+          docker compose -p auto -f pro-ha.yml -f deps_pro-ha.yml -f ${DB}.yml -f ${CACHE}.yml --env-file master.env --profile slave-datacenter up --quiet-pull -d --build
         fi
 
 
