@@ -1,4 +1,3 @@
-version: "3"
 services:
   postgres:
     profiles: ["all", "master-datacenter"]
