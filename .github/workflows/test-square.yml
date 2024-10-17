@@ -214,7 +214,7 @@ jobs:
   ui-tests:
     needs:
       - test-controller-ui
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
       XUNIT_REPORT_PATH: ${{ github.workspace}}/test-results.xml
       BASE_REF: master
